@@ -9,57 +9,55 @@
 </head>
 <body>
 
-  <!-- 1. 載入中畫面 -->
   <div id="loadingView" class="view-section active">
     <h2>系統載入中...</h2>
     <p>正在驗證您的身分</p>
   </div>
 
-  <!-- 2. 會員註冊畫面 -->
   <div id="registerView" class="view-section">
     <h2>新會員註冊</h2>
     <form id="registerForm">
       <label>手機號碼 (將作為會員編號)*</label>
       <input type="tel" id="regPhone" required placeholder="0912345678">
-      
       <label>公司名稱*</label>
       <input type="text" id="regCompany" required>
-      
       <label>負責人姓名*</label>
       <input type="text" id="regManager" required>
-      
       <label>統一編號</label>
       <input type="text" id="regTaxId">
-      
       <label>預設送貨地址</label>
       <input type="text" id="regAddress">
-      
       <button type="submit" class="btn primary-btn">確認註冊</button>
     </form>
   </div>
 
-  <!-- 3. 會員/管理員儀表板畫面 -->
   <div id="dashboardView" class="view-section">
     <h2 id="welcomeMessage">歡迎</h2>
     <p>會員編號：<span id="displayMemberId"></span></p>
     <p>您的權限：<span id="displayRole" class="badge"></span></p>
-    
     <hr>
-    
-    <!-- 買方功能區 -->
     <div class="action-group">
       <h3>採購專區</h3>
-      <button class="btn" onclick="alert('商品列表開發中')">前往瀏覽商品</button>
+      <!-- 綁定點擊事件載入商品 -->
+      <button class="btn" onclick="loadProducts()">前往瀏覽商品</button>
       <button class="btn" onclick="alert('訂單查詢開發中')">我的採購訂單</button>
-      <button class="btn" onclick="alert('個人資料修改開發中')">修改個人資料</button>
     </div>
-
-    <!-- 管理員專屬入口 -->
     <div id="adminPanel" class="action-group" style="display: none;">
       <h3>管理員專區</h3>
       <button class="btn admin-btn" onclick="alert('賣方訂單與理貨系統開發中')">📦 進入理貨與訂單系統</button>
       <button id="advancedAdminBtn" class="btn admin-btn-danger" style="display: none;" onclick="alert('進銷存與日誌系統開發中')">⚙️ 進銷存與日誌管理</button>
     </div>
+  </div>
+
+  <!-- 新增：商品列表畫面 -->
+  <div id="productListView" class="view-section">
+    <h2>B2B 採購清單</h2>
+    <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>
+    <div id="productContainer">
+      <!-- 這裡會由 JS 動態填入商品卡片 -->
+      <p>載入商品中...</p>
+    </div>
+    <button class="btn admin-btn" onclick="alert('購物車開發中')" style="position: sticky; bottom: 10px;">查看購物車 (0)</button>
   </div>
 
   <script src="js/app.js"></script>

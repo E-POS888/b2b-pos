@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>B2B POS 系統</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- 導入 LINE LIFF SDK -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+<body>
+
+  <!-- 1. 載入中畫面 -->
+  <div id="loadingView" class="view-section active">
+    <h2>系統載入中...</h2>
+    <p>正在驗證您的身分</p>
+  </div>
+
+  <!-- 2. 會員註冊畫面 -->
+  <div id="registerView" class="view-section">
+    <h2>新會員註冊</h2>
+    <form id="registerForm">
+      <label>手機號碼 (將作為會員編號)*</label>
+      <input type="tel" id="regPhone" required placeholder="0912345678">
+      
+      <label>公司名稱*</label>
+      <input type="text" id="regCompany" required>
+      
+      <label>負責人姓名*</label>
+      <input type="text" id="regManager" required>
+      
+      <label>統一編號</label>
+      <input type="text" id="regTaxId">
+      
+      <label>預設送貨地址</label>
+      <input type="text" id="regAddress">
+      
+      <button type="submit" class="btn primary-btn">確認註冊</button>
+    </form>
+  </div>
+
+  <!-- 3. 會員/管理員儀表板畫面 -->
+  <div id="dashboardView" class="view-section">
+    <h2 id="welcomeMessage">歡迎</h2>
+    <p>會員編號：<span id="displayMemberId"></span></p>
+    <p>您的權限：<span id="displayRole" class="badge"></span></p>
+    
+    <hr>
+    
+    <!-- 買方功能區 -->
+    <div class="action-group">
+      <h3>採購專區</h3>
+      <button class="btn" onclick="alert('商品列表開發中')">前往瀏覽商品</button>
+      <button class="btn" onclick="alert('訂單查詢開發中')">我的採購訂單</button>
+      <button class="btn" onclick="alert('個人資料修改開發中')">修改個人資料</button>
+    </div>
+
+    <!-- 管理員專屬入口 (預設隱藏，由 JS 控制顯示) -->
+    <div id="adminPanel" class="action-group" style="display: none;">
+      <h3>管理員專區</h3>
+      <button class="btn admin-btn" onclick="alert('賣方訂單與理貨系統開發中')">📦 進入理貨與訂單系統</button>
+      <button id="advancedAdminBtn" class="btn admin-btn-danger" style="display: none;" onclick="alert('進銷存與日誌系統開發中')">⚙️ 進銷存與日誌管理</button>
+    </div>
+  </div>
+
+  <!-- 導入我們的邏輯腳本 -->
+  <script src="app.js"></script>
+</body>
+</html>

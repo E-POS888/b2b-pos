@@ -1,24 +1,14 @@
 const LIFF_ID = '2012296480-FSAclNbs'; 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxYx_h3YGtJ7chIJGWSVxFxMmR5rdyAirXF-Uo658iak_UjLOP3j4Z95YWinE5x-emFPg/exec';
 
-let currentUser = {
-  uid: null,
-  displayName: null
-};
-
-// 新增：設定 8 秒逾時計時器變數
+let currentUser = { uid: null, displayName: null };
 let timeoutTimer;
 
 window.onload = function() {
-  // 啟動 8 秒逾時計時器
-  timeoutTimer = setTimeout(() => {
-    handleTimeout();
-  }, 8000);
-
+  timeoutTimer = setTimeout(() => { handleTimeout(); }, 8000);
   initializeLiff();
 };
 
-// 處理逾時的畫面替換
 function handleTimeout() {
   const loadingView = document.getElementById('loadingView');
   loadingView.innerHTML = `
@@ -34,7 +24,6 @@ function handleTimeout() {
   `;
 }
 
-// 成功載入後，清除計時器
 function clearSysTimeout() {
   if (timeoutTimer) {
     clearTimeout(timeoutTimer);
@@ -46,7 +35,7 @@ function initializeLiff() {
   liff.init({ liffId: LIFF_ID })
     .then(() => {
       if (!liff.isLoggedIn()) {
-        clearSysTimeout(); // 暫停計時，等待使用者登入
+        clearSysTimeout();
         liff.login();
       } else {
         liff.getProfile().then(profile => {
@@ -66,10 +55,7 @@ function initializeLiff() {
 }
 
 function loginToSystem() {
-  const payload = {
-    action: 'login',
-    data: { uid: currentUser.uid }
-  };
+  const payload = { action: 'login', data: { uid: currentUser.uid } };
 
   fetch(GAS_URL, {
     method: 'POST',
@@ -77,8 +63,7 @@ function loginToSystem() {
   })
   .then(response => response.json())
   .then(result => {
-    clearSysTimeout(); // 成功收到伺服器回應，清除逾時計時器！
-
+    clearSysTimeout();
     if (result.status === 'success') {
       const data = result.data;
       if (data.isRegistered === false && data.status === 'REQUIRE_REGISTRATION') {
@@ -99,7 +84,6 @@ function loginToSystem() {
 
 document.getElementById('registerForm').addEventListener('submit', function(e) {
   e.preventDefault(); 
-  
   const regData = {
     uid: currentUser.uid,
     phone: document.getElementById('regPhone').value,
@@ -120,7 +104,6 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
   .then(result => {
     if (result.status === 'success') {
       alert('註冊成功！歡迎加入。');
-      // 重置載入畫面並重新登入取得權限
       document.getElementById('loadingView').innerHTML = `<h2>系統載入中...</h2><p>正在驗證您的身分</p>`;
       loginToSystem();
     } else {
@@ -148,6 +131,44 @@ function setupDashboard(userData) {
     adminPanel.style.display = 'none';
     advancedAdminBtn.style.display = 'none';
   }
+}
+
+// 新增：載入並渲染商品列表
+function loadProducts() {
+  switchView('productListView');
+  const container = document.getElementById('productContainer');
+  container.innerHTML = '<p>讀取商品中，請稍候...</p>';
+
+  // GET 請求不帶 body，直接將 action 放進網址參數
+  fetch(`${GAS_URL}?action=getProducts`)
+    .then(response => response.json())
+    .then(result => {
+      if (result.status === 'success') {
+        const products = result.data;
+        if (products.length === 0) {
+          container.innerHTML = '<p>目前尚無可供採購的商品。</p>';
+          return;
+        }
+        
+        let html = '';
+        products.forEach(p => {
+          html += `
+            <div style="border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+              <h4>${p.name} (SKU: ${p.sku})</h4>
+              <p>批發價：$${p.price || 0}</p>
+              <p>可用庫存：${p.availableQty || 0}</p>
+              <button class="btn" style="padding: 5px; margin-top: 5px;" onclick="alert('加入購物車邏輯開發中')">加入購物車</button>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = `<p style="color:red;">讀取失敗：${result.message}</p>`;
+      }
+    })
+    .catch(error => {
+      container.innerHTML = `<p style="color:red;">連線錯誤：${error}</p>`;
+    });
 }
 
 function switchView(viewId) {

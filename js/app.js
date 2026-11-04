@@ -1,44 +1,70 @@
-// 已為你綁定專屬的 LIFF ID 與 GAS 後端 API 網址
 const LIFF_ID = '2012296480-FSAclNbs'; 
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxYx_h3YGtJ7chIJGWSVxFxMmR5rdyAirXF-Uo658iak_UjLOP3j4Z95YWinE5x-emFPg/exec';
 
-// 全域變數，用來儲存當前使用者的狀態
 let currentUser = {
   uid: null,
   displayName: null
 };
 
-// 網頁載入完成後，啟動 LIFF
+// 新增：設定 8 秒逾時計時器變數
+let timeoutTimer;
+
 window.onload = function() {
+  // 啟動 8 秒逾時計時器
+  timeoutTimer = setTimeout(() => {
+    handleTimeout();
+  }, 8000);
+
   initializeLiff();
 };
 
-// 1. 初始化 LIFF
+// 處理逾時的畫面替換
+function handleTimeout() {
+  const loadingView = document.getElementById('loadingView');
+  loadingView.innerHTML = `
+    <h2 style="color: #e74c3c;">連線逾時或失敗</h2>
+    <p>系統載入超過 8 秒，無法完成身分驗證。</p>
+    <div style="background: #fdf2e9; padding: 10px; margin-top: 15px; border-radius: 5px; font-size: 13px; text-align: left;">
+      <strong>🔧 開發除錯提示：</strong><br>
+      1. 檢查 LIFF ID 是否正確綁定 Endpoint URL。<br>
+      2. 檢查 GAS 專案部署的「存取權限」是否設為「所有人」。<br>
+      3. 確認手機網路連線正常。
+    </div>
+    <button class="btn" onclick="location.reload()" style="margin-top: 20px;">重新整理</button>
+  `;
+}
+
+// 成功載入後，清除計時器
+function clearSysTimeout() {
+  if (timeoutTimer) {
+    clearTimeout(timeoutTimer);
+    timeoutTimer = null;
+  }
+}
+
 function initializeLiff() {
   liff.init({ liffId: LIFF_ID })
     .then(() => {
       if (!liff.isLoggedIn()) {
-        // 若未登入，引導至 LINE 登入畫面
+        clearSysTimeout(); // 暫停計時，等待使用者登入
         liff.login();
       } else {
-        // 已登入，獲取使用者基本資訊
         liff.getProfile().then(profile => {
           currentUser.uid = profile.userId;
           currentUser.displayName = profile.displayName;
-          
-          // 拿到 UID 後，向 GAS 後端發送登入請求
           loginToSystem();
         }).catch(err => {
+          clearSysTimeout();
           alert('取得 LINE 資料失敗: ' + err);
         });
       }
     })
     .catch(err => {
+      clearSysTimeout();
       alert('LIFF 初始化失敗，請確認 LIFF ID 是否正確。');
     });
 }
 
-// 2. 呼叫 GAS API 進行系統登入
 function loginToSystem() {
   const payload = {
     action: 'login',
@@ -51,14 +77,13 @@ function loginToSystem() {
   })
   .then(response => response.json())
   .then(result => {
+    clearSysTimeout(); // 成功收到伺服器回應，清除逾時計時器！
+
     if (result.status === 'success') {
       const data = result.data;
-      
       if (data.isRegistered === false && data.status === 'REQUIRE_REGISTRATION') {
-        // 系統查無此人，切換至「註冊畫面」
         switchView('registerView');
       } else {
-        // 系統有資料，進入「儀表板畫面」
         setupDashboard(data);
         switchView('dashboardView');
       }
@@ -67,15 +92,14 @@ function loginToSystem() {
     }
   })
   .catch(error => {
-    alert('無法連線至伺服器：' + error);
+    clearSysTimeout();
+    alert('無法連線至伺服器，請檢查網路或 GAS 設定：' + error);
   });
 }
 
-// 3. 處理註冊表單送出
 document.getElementById('registerForm').addEventListener('submit', function(e) {
-  e.preventDefault(); // 阻止表單預設的跳頁刷新
+  e.preventDefault(); 
   
-  // 收集表單資料
   const regData = {
     uid: currentUser.uid,
     phone: document.getElementById('regPhone').value,
@@ -85,7 +109,8 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
     address: document.getElementById('regAddress').value
   };
 
-  switchView('loadingView'); // 顯示載入中
+  switchView('loadingView'); 
+  document.getElementById('loadingView').innerHTML = `<h2>資料送出中...</h2><p>請稍候</p>`;
 
   fetch(GAS_URL, {
     method: 'POST',
@@ -95,7 +120,8 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
   .then(result => {
     if (result.status === 'success') {
       alert('註冊成功！歡迎加入。');
-      // 註冊成功後，重新執行登入流程來獲取最新權限
+      // 重置載入畫面並重新登入取得權限
+      document.getElementById('loadingView').innerHTML = `<h2>系統載入中...</h2><p>正在驗證您的身分</p>`;
       loginToSystem();
     } else {
       alert('註冊失敗：' + result.message);
@@ -105,35 +131,28 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
   .catch(error => alert('連線失敗：' + error));
 });
 
-// 4. 設定儀表板與權限顯示
 function setupDashboard(userData) {
   document.getElementById('welcomeMessage').innerText = `歡迎，${userData.companyName}`;
   document.getElementById('displayMemberId').innerText = userData.memberId;
   document.getElementById('displayRole').innerText = userData.role;
 
-  // 權限判斷：解鎖後台按鈕
   const adminPanel = document.getElementById('adminPanel');
   const advancedAdminBtn = document.getElementById('advancedAdminBtn');
 
   if (userData.role === '一般管理員' || userData.role === '進階管理員') {
-    adminPanel.style.display = 'block'; // 顯示管理員區塊
-    
+    adminPanel.style.display = 'block'; 
     if (userData.role === '進階管理員') {
-      advancedAdminBtn.style.display = 'block'; // 顯示進階功能按鈕
+      advancedAdminBtn.style.display = 'block'; 
     }
   } else {
-    // 一般買方，隱藏管理員區塊
     adminPanel.style.display = 'none';
     advancedAdminBtn.style.display = 'none';
   }
 }
 
-// 5. 共用工具：切換畫面 (控制 CSS 的 active class)
 function switchView(viewId) {
-  // 先把所有畫面隱藏
   document.querySelectorAll('.view-section').forEach(el => {
     el.classList.remove('active');
   });
-  // 顯示指定的畫面
   document.getElementById(viewId).classList.add('active');
 }

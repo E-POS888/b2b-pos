@@ -1,0 +1,79 @@
+/* 基礎設定 */
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  background-color: #f4f7f6;
+  color: #333;
+  margin: 0;
+  padding: 20px;
+}
+
+/* 視圖切換邏輯 (重點) */
+.view-section {
+  display: none; /* 預設全部隱藏 */
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.view-section.active {
+  display: block; /* 加上 active 才會顯示 */
+}
+
+/* 表單與按鈕設計 */
+h2, h3 {
+  color: #2c3e50;
+  text-align: center;
+}
+
+label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* 確保 padding 不會撐破寬度 */
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  margin-top: 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.btn:hover { background-color: #2980b9; }
+
+.admin-btn { background-color: #e67e22; margin-top: 10px; }
+.admin-btn:hover { background-color: #d35400; }
+
+.admin-btn-danger { background-color: #e74c3c; margin-top: 10px; }
+.admin-btn-danger:hover { background-color: #c0392b; }
+
+.badge {
+  background-color: #2ecc71;
+  color: white;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.action-group {
+  margin-top: 20px;
+  padding-top: 10px;
+}

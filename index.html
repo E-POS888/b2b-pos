@@ -34,8 +34,9 @@
     </div>
     <div id="adminPanel" class="action-group" style="display: none;">
       <h3>管理員專區</h3>
-      <!-- 修改按鈕指向新的後台接單畫面 -->
       <button class="btn admin-btn" onclick="loadAdminOrders()">📦 訂單管理與接單系統</button>
+      <!-- 新增直接進入掃碼理貨的按鈕 -->
+      <button class="btn admin-btn" style="background-color: #27ae60;" onclick="showEnterPickingOrder()">🔍 掃碼理貨系統</button>
       <button id="advancedAdminBtn" class="btn admin-btn-danger" style="display: none;" onclick="alert('進銷存與日誌系統開發中')">⚙️ 進銷存與日誌管理</button>
     </div>
   </div>
@@ -52,24 +53,47 @@
     <button class="btn" onclick="switchView('productListView')" style="background:#7f8c8d; margin-bottom:15px;">繼續選購</button>
     <div id="cartContainer" style="margin-bottom: 20px;"></div>
     <h3 style="text-align: right; color: #e74c3c;">總計：$<span id="cartTotal">0</span></h3>
-    
-    <!-- 線上簽名區塊 -->
     <div id="signatureSection">
       <h4>請在此簽名：</h4>
-      <div class="signature-wrapper">
-        <canvas id="signatureCanvas"></canvas>
-      </div>
+      <div class="signature-wrapper"><canvas id="signatureCanvas"></canvas></div>
       <button class="btn" onclick="clearSignature()" style="background:#95a5a6; padding:5px; margin-top:0;">清除重簽</button>
     </div>
-
     <button class="btn primary-btn" onclick="submitOrder()" id="submitOrderBtn">確認送出訂單</button>
   </div>
 
-  <!-- 新增：管理員接單系統 -->
   <div id="adminOrderView" class="view-section">
     <h2>待審核訂單列表</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>
     <div id="adminOrderContainer"><p>載入中...</p></div>
+  </div>
+
+  <!-- 新增 1：輸入理貨單號畫面 -->
+  <div id="enterPickingOrderView" class="view-section">
+    <h2>掃碼理貨系統</h2>
+    <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>
+    <label>請輸入或掃描要理貨的訂單單號：</label>
+    <input type="text" id="targetOrderIdInput" placeholder="例如：ORD-20261105-1234" style="margin-bottom: 15px;">
+    <button class="btn admin-btn" onclick="startPicking()">開始理貨</button>
+  </div>
+
+  <!-- 新增 2：執行掃碼理貨畫面 -->
+  <div id="pickingProcessView" class="view-section">
+    <h2>單號：<span id="pickingOrderIdText"></span></h2>
+    <button class="btn" onclick="switchView('enterPickingOrderView')" style="background:#7f8c8d; margin-bottom:15px;">暫停並離開</button>
+    
+    <div style="background:#f1c40f; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+      <strong>系統就緒！</strong><br>
+      請直接拿起掃碼機刷入條碼。
+    </div>
+    
+    <!-- 隱藏的輸入框，用來接收掃碼機條碼 -->
+    <input type="text" id="barcodeListener" autofocus style="opacity: 0.1; height: 1px; width: 100%; border: none;">
+    
+    <div id="pickingListContainer">
+      <!-- 動態產生待檢核項目 -->
+    </div>
+
+    <button class="btn primary-btn" onclick="submitPickingFinal()" id="submitPickingBtn" style="margin-top: 20px;">確認並完成理貨</button>
   </div>
 
   <script src="js/app.js"></script>

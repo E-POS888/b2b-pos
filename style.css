@@ -1,28 +1,114 @@
-body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
 
-/* === 新增：全局 Logo 標題區塊 === */
-.app-header { text-align: center; margin-bottom: 20px; }
-.app-logo { max-width: 120px; height: auto; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+:root {
+  --bg-color: #F7F4EF;        /* 燕麥奶背景色 */
+  --card-bg: #FFFFFF;         /* 純白卡片 */
+  --text-main: #4A4036;       /* 溫潤深灰咖 (主標題) */
+  --text-muted: #8C7A6B;      /* 質感淺茶色 (副標題) */
+  --primary: #8B6B4A;         /* 木質調主色 (按鈕/強調) */
+  --primary-hover: #735538;
+  --secondary: #A38C75;       /* 輔助木紋色 */
+  --accent: #C19A6B;          
+  --danger: #D47C7C;          /* 柔和的警示紅 */
+  --success: #799C76;         /* 柔和的成功綠 */
+  --border-light: #E8DED1;
+  --radius-lg: 16px;
+  --radius-sm: 8px;
+  --shadow-card: 0 8px 24px rgba(139, 107, 74, 0.08);
+  --shadow-btn: 0 4px 12px rgba(139, 107, 74, 0.15);
+}
 
-.view-section { display: none; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: 0 auto; }
-.view-section.active { display: block; }
-h2, h3, h4 { color: #2c3e50; text-align: center; }
-label { display: block; margin-top: 15px; font-weight: bold; font-size: 14px; }
-input, select { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-.btn { display: block; width: 100%; padding: 12px; margin-top: 20px; background-color: #3498db; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
-.btn:hover { background-color: #2980b9; }
-.admin-btn { background-color: #e67e22; margin-top: 10px; }
-.admin-btn:hover { background-color: #d35400; }
-.admin-btn-danger { background-color: #e74c3c; margin-top: 10px; }
-.admin-btn-danger:hover { background-color: #c0392b; }
-.badge { background-color: #2ecc71; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
-.action-group { margin-top: 20px; padding-top: 10px; }
-.signature-wrapper { border: 2px dashed #bdc3c7; background: #fdfdfd; margin: 15px 0; touch-action: none; text-align: center; }
-canvas { width: 100%; max-width: 400px; height: 150px; }
-.order-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; border-left: 4px solid #e67e22; }
+body {
+  font-family: 'Noto Sans TC', 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  margin: 0;
+  padding: 20px 15px;
+  line-height: 1.6;
+}
 
-/* 商品圖片與卡片樣式 */
-.product-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-.product-img { width: 100%; height: 180px; object-fit: cover; border-radius: 4px; margin-bottom: 10px; background-color: #f1f2f6; }
-.product-desc { font-size: 14px; color: #555; margin: 10px 0; line-height: 1.4; }
-.empty-img { width: 100%; height: 180px; background: #eee; display: flex; align-items: center; justify-content: center; border-radius: 4px; margin-bottom: 10px; color: #aaa; }
+/* === 全局 Logo 與標題 === */
+.app-header {
+  text-align: center;
+  margin-bottom: 25px;
+}
+.app-logo {
+  max-width: 120px;
+  height: auto;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-card);
+}
+
+/* === 視圖容器與動畫 === */
+.view-section {
+  display: none;
+  background: var(--card-bg);
+  padding: 30px 20px;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  max-width: 480px;
+  margin: 0 auto;
+}
+.view-section.active {
+  display: block;
+  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === 標題與排版 === */
+h2 { color: var(--primary); text-align: center; margin-top: 0; font-weight: 700; letter-spacing: 1px; }
+h3 { color: var(--text-main); font-weight: 500; font-size: 18px; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; margin-top: 25px; }
+h4 { color: var(--text-main); font-weight: 500; margin-bottom: 5px; }
+hr { border: 0; height: 1px; background: var(--border-light); margin: 20px 0; }
+
+/* === 表單與輸入框 === */
+label { display: block; margin-top: 15px; font-weight: 500; font-size: 14px; color: var(--text-muted); }
+input, select {
+  width: 100%; padding: 12px 15px; margin-top: 6px;
+  border: 1px solid var(--border-light); border-radius: var(--radius-sm);
+  background-color: #FCFBF9; color: var(--text-main); font-size: 15px;
+  box-sizing: border-box; transition: all 0.3s ease;
+}
+input:focus, select:focus {
+  border-color: var(--primary); outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 107, 74, 0.1);
+  background-color: #FFF;
+}
+
+/* === 按鈕設計 === */
+.btn {
+  display: block; width: 100%; padding: 14px; margin-top: 15px;
+  background-color: var(--secondary); color: white; border: none;
+  border-radius: var(--radius-sm); font-size: 16px; font-weight: 500;
+  cursor: pointer; transition: all 0.3s ease; letter-spacing: 1px;
+}
+.btn:hover { background-color: #8C7560; transform: translateY(-1px); box-shadow: var(--shadow-btn); }
+.primary-btn { background-color: var(--primary); }
+.primary-btn:hover { background-color: var(--primary-hover); }
+.admin-btn { background-color: var(--secondary); }
+.admin-btn-danger { background-color: var(--danger); }
+.admin-btn-danger:hover { background-color: #BA6666; }
+
+/* === 標籤與小元素 === */
+.badge { background-color: var(--success); color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.action-group { margin-top: 20px; }
+
+/* === 商品與訂單卡片 === */
+.product-card, .order-card {
+  border: none; padding: 20px; margin-bottom: 15px;
+  border-radius: var(--radius-lg); background: #FCFBF9;
+  box-shadow: 0 2px 8px rgba(139, 107, 74, 0.05);
+  border-left: 4px solid var(--primary);
+  transition: transform 0.2s ease;
+}
+.product-card:hover { transform: translateY(-2px); }
+.product-img { width: 100%; height: 200px; object-fit: cover; border-radius: var(--radius-sm); margin-bottom: 12px; background-color: var(--border-light); }
+.product-desc { font-size: 14px; color: var(--text-muted); margin: 10px 0; line-height: 1.5; }
+.empty-img { width: 100%; height: 200px; background: var(--bg-color); display: flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); margin-bottom: 12px; color: var(--text-muted); font-size: 14px; }
+
+/* === 簽名板 === */
+.signature-wrapper { border: 2px dashed var(--border-light); background: #FFF; margin: 15px 0; border-radius: var(--radius-sm); touch-action: none; overflow: hidden; }
+canvas { width: 100%; max-width: 400px; height: 160px; }

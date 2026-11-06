@@ -9,9 +9,15 @@
 </head>
 <body>
 
+  <!-- 代客下單橫幅 -->
   <div id="proxyBanner" style="display: none; background: #e67e22; color: white; padding: 10px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 100;">
     👨‍💼 代客下單模式：為客戶 <span id="proxyClientName"></span> 操作中
     <button onclick="exitProxyMode()" style="margin-left: 10px; padding: 2px 8px; cursor: pointer;">退出</button>
+  </div>
+
+  <!-- === 新增：全局 Logo 與系統名稱 === -->
+  <div class="app-header">
+    <img src="logo.jpg" alt="Logo" class="app-logo">
   </div>
 
   <div id="loadingView" class="view-section active"><h2>系統載入中...</h2><p>正在驗證身分</p></div>
@@ -36,6 +42,8 @@
       <h3>採購專區</h3>
       <button class="btn" onclick="loadProducts()">前往瀏覽商品</button>
       <button class="btn" onclick="loadBuyerOrders()">我的採購訂單</button>
+      <!-- === 修改：對接真實的修改資料功能 === -->
+      <button class="btn" style="background-color: #95a5a6;" onclick="loadEditProfile()">修改個人資料</button>
     </div>
     <div id="adminPanel" class="action-group" style="display: none;">
       <h3>管理員專區</h3>
@@ -50,6 +58,20 @@
         <button class="btn admin-btn-danger" style="background-color: #2c3e50;" onclick="loadAdminProducts()">⚙️ 建立商品與進銷存管理</button>
       </div>
     </div>
+  </div>
+
+  <!-- === 新增：修改個人資料畫面 === -->
+  <div id="profileView" class="view-section">
+    <h2>修改個人資料</h2>
+    <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">取消返回</button>
+    <form id="profileForm">
+      <label>手機號碼 (聯絡用)</label><input type="tel" id="editPhone" required>
+      <label>公司名稱*</label><input type="text" id="editCompany" required>
+      <label>負責人姓名*</label><input type="text" id="editManager" required>
+      <label>統一編號</label><input type="text" id="editTaxId">
+      <label>預設送貨地址</label><input type="text" id="editAddress">
+      <button type="submit" class="btn primary-btn">儲存修改</button>
+    </form>
   </div>
 
   <div id="proxySetupView" class="view-section">
@@ -140,6 +162,7 @@
   <div id="adminProductView" class="view-section">
     <h2>商品建檔與管理</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>
+    
     <div style="background: #ecf0f1; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
       <h3 style="margin-top: 0;">➕ 新增商品</h3>
       <form id="newProductForm">

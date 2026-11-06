@@ -50,6 +50,42 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
   }).catch(err => alert('連線失敗'));
 });
 
+// === 新增：修改個人資料邏輯 ===
+function loadEditProfile() {
+  switchView('profileView');
+  document.getElementById('editPhone').value = currentProfile.phone || '';
+  document.getElementById('editCompany').value = currentProfile.companyName || '';
+  document.getElementById('editManager').value = currentProfile.managerName || '';
+  document.getElementById('editTaxId').value = currentProfile.taxId || '';
+  document.getElementById('editAddress').value = currentProfile.address || '';
+}
+
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const updateData = {
+    uid: currentUser.uid,
+    phone: document.getElementById('editPhone').value.trim(),
+    companyName: document.getElementById('editCompany').value.trim(),
+    managerName: document.getElementById('editManager').value.trim(),
+    taxId: document.getElementById('editTaxId').value.trim(),
+    address: document.getElementById('editAddress').value.trim()
+  };
+  
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'updateProfile', data: updateData }) })
+  .then(res => res.json()).then(result => {
+    if (result.status === 'success') {
+      alert('資料修改成功！');
+      currentProfile.phone = updateData.phone;
+      currentProfile.companyName = updateData.companyName;
+      currentProfile.managerName = updateData.managerName;
+      currentProfile.taxId = updateData.taxId;
+      currentProfile.address = updateData.address;
+      setupDashboard(currentProfile);
+      switchView('dashboardView');
+    } else alert('修改失敗：' + result.message);
+  }).catch(err => alert('連線失敗'));
+});
+
 function setupDashboard(userData) {
   document.getElementById('welcomeMessage').innerText = `歡迎，${userData.companyName}`;
   document.getElementById('displayMemberId').innerText = userData.memberId;
@@ -313,7 +349,7 @@ function submitPickingFinal() {
   }).finally(() => { document.getElementById('submitPickingBtn').innerText = '確認並完成理貨'; document.getElementById('submitPickingBtn').disabled = false; });
 }
 
-// === 新增：類別管理邏輯 ===
+// === 類別管理邏輯 ===
 function loadAdminCategories() {
   switchView('adminCategoryView');
   document.getElementById('adminCategoryContainer').innerHTML = '<p>讀取清單中...</p>';

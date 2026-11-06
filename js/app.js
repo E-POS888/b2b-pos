@@ -128,7 +128,7 @@ function loadBuyerOrders() {
   });
 }
 
-// === 購物車與下單 (升級圖文版) ===
+// === 購物車與下單 ===
 function loadProducts() {
   switchView('productListView'); document.getElementById('productContainer').innerHTML = '<p>讀取中...</p>';
   fetch(`${GAS_URL}?action=getProducts`).then(res => res.json()).then(result => {
@@ -139,7 +139,6 @@ function loadProducts() {
       products.forEach(p => {
         let catBadge = p.category ? `<span class="badge" style="background:#34495e; margin-right:5px;">${p.category}</span>` : '';
         let imgHtml = p.imageUrl ? `<img src="${p.imageUrl}" class="product-img" alt="${p.name}">` : `<div class="empty-img">尚無圖片</div>`;
-        
         html += `<div class="product-card">
             ${imgHtml}
             <h4 style="margin: 5px 0;">${catBadge}${p.name}</h4>
@@ -192,6 +191,7 @@ function submitOrder() {
   }).finally(() => { document.getElementById('submitOrderBtn').innerText = '確認送出訂單'; document.getElementById('submitOrderBtn').disabled = false; });
 }
 
+// 簽名板功能
 function initSignaturePad() {
   canvas = document.getElementById('signatureCanvas'); ctx = canvas.getContext('2d');
   canvas.addEventListener('mousedown', e => { isDrawing = true; drawStart(e.offsetX, e.offsetY); });

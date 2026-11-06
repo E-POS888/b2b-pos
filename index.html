@@ -35,7 +35,6 @@
     <div class="action-group">
       <h3>採購專區</h3>
       <button class="btn" onclick="loadProducts()">前往瀏覽商品</button>
-      <!-- 修正按鈕對接歷史訂單 -->
       <button class="btn" onclick="loadBuyerOrders()">我的採購訂單</button>
     </div>
     <div id="adminPanel" class="action-group" style="display: none;">
@@ -44,6 +43,13 @@
       <button class="btn admin-btn" style="background-color: #27ae60;" onclick="showEnterPickingOrder()">🔍 掃碼理貨系統</button>
       <button class="btn admin-btn" style="background-color: #8e44ad;" onclick="switchView('proxySetupView')">👨‍💼 代客建檔與操作</button>
       <button class="btn admin-btn-danger" onclick="loadAnomalyOrders()">⚠️ 缺貨異常專區</button>
+      
+      <!-- 進階管理員專區 -->
+      <div id="advancedAdminPanel" style="display: none; border-top: 2px dashed #ccc; padding-top: 15px; margin-top: 15px;">
+        <h4 style="margin:0; color:#2c3e50;">進階管理</h4>
+        <button class="btn" style="background-color: #34495e;" onclick="loadAdminCategories()">📂 大項目分類管理</button>
+        <button class="btn admin-btn-danger" style="background-color: #2c3e50;" onclick="loadAdminProducts()">⚙️ 建立商品與進銷存管理</button>
+      </div>
     </div>
   </div>
 
@@ -82,7 +88,6 @@
     <button class="btn primary-btn" onclick="submitOrder()" id="submitOrderBtn">確認送出訂單</button>
   </div>
   
-  <!-- 新增：買方歷史訂單畫面 -->
   <div id="buyerOrderHistoryView" class="view-section">
     <h2>歷史採購紀錄</h2>
     <button class="btn" onclick="handleReturnFromProducts()" style="background:#7f8c8d; margin-bottom:15px;">返回</button>
@@ -116,6 +121,48 @@
     <input type="text" id="barcodeListener" autofocus style="opacity: 0.1; height: 1px; width: 100%; border: none;">
     <div id="pickingListContainer"></div>
     <button class="btn primary-btn" onclick="submitPickingFinal()" id="submitPickingBtn" style="margin-top: 20px;">確認並完成理貨</button>
+  </div>
+
+  <!-- === 新增：大項目分類管理介面 === -->
+  <div id="adminCategoryView" class="view-section">
+    <h2>大項目分類管理</h2>
+    <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>
+    
+    <div style="background: #ecf0f1; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+      <h3 style="margin-top: 0;">➕ 新增分類</h3>
+      <form id="newCategoryForm">
+        <label>分類名稱*</label><input type="text" id="ncName" required>
+        <label>備註說明</label><input type="text" id="ncNote">
+        <button type="submit" class="btn primary-btn" style="background:#34495e;">建立新分類</button>
+      </form>
+    </div>
+
+    <h3>現有分類清單</h3>
+    <div id="adminCategoryContainer"><p>載入中...</p></div>
+  </div>
+
+  <div id="adminProductView" class="view-section">
+    <h2>商品建檔與管理</h2>
+    <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>
+    
+    <div style="background: #ecf0f1; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+      <h3 style="margin-top: 0;">➕ 新增商品</h3>
+      <form id="newProductForm">
+        <label>商品名稱*</label><input type="text" id="npName" required>
+        <label>SKU (唯一貨號)*</label><input type="text" id="npSku" required>
+        <label>掃描條碼</label><input type="text" id="npBarcode">
+        <label>大項目分類</label>
+        <select id="npMajorId" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+          <option value="">無分類</option>
+        </select>
+        <label>B2B 批發價*</label><input type="number" id="npPrice" required>
+        <label>安全庫存水位</label><input type="number" id="npSafeStock" value="0">
+        <button type="submit" class="btn primary-btn">新增建檔</button>
+      </form>
+    </div>
+
+    <h3>現有商品清單</h3>
+    <div id="adminProductContainer"><p>載入中...</p></div>
   </div>
 
   <script src="js/app.js"></script>

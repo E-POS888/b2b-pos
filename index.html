@@ -9,32 +9,23 @@
 </head>
 <body>
 
-  <div id="loadingView" class="view-section active">
-    <h2>系統載入中...</h2>
-    <p>正在驗證您的身分</p>
-  </div>
+  <div id="loadingView" class="view-section active"><h2>系統載入中...</h2><p>正在驗證身分</p></div>
 
   <div id="registerView" class="view-section">
     <h2>新會員註冊</h2>
     <form id="registerForm">
-      <label>手機號碼 (將作為會員編號)*</label>
-      <input type="tel" id="regPhone" required placeholder="0912345678">
-      <label>公司名稱*</label>
-      <input type="text" id="regCompany" required>
-      <label>負責人姓名*</label>
-      <input type="text" id="regManager" required>
-      <label>統一編號</label>
-      <input type="text" id="regTaxId">
-      <label>預設送貨地址</label>
-      <input type="text" id="regAddress">
+      <label>手機號碼 (將作為會員編號)*</label><input type="tel" id="regPhone" required>
+      <label>公司名稱*</label><input type="text" id="regCompany" required>
+      <label>負責人姓名*</label><input type="text" id="regManager" required>
+      <label>統一編號</label><input type="text" id="regTaxId">
+      <label>預設送貨地址</label><input type="text" id="regAddress">
       <button type="submit" class="btn primary-btn">確認註冊</button>
     </form>
   </div>
 
   <div id="dashboardView" class="view-section">
     <h2 id="welcomeMessage">歡迎</h2>
-    <p>會員編號：<span id="displayMemberId"></span></p>
-    <p>您的權限：<span id="displayRole" class="badge"></span></p>
+    <p>會員編號：<span id="displayMemberId"></span> | 權限：<span id="displayRole" class="badge"></span></p>
     <hr>
     <div class="action-group">
       <h3>採購專區</h3>
@@ -43,7 +34,8 @@
     </div>
     <div id="adminPanel" class="action-group" style="display: none;">
       <h3>管理員專區</h3>
-      <button class="btn admin-btn" onclick="alert('賣方訂單與理貨系統開發中')">📦 進入理貨與訂單系統</button>
+      <!-- 修改按鈕指向新的後台接單畫面 -->
+      <button class="btn admin-btn" onclick="loadAdminOrders()">📦 訂單管理與接單系統</button>
       <button id="advancedAdminBtn" class="btn admin-btn-danger" style="display: none;" onclick="alert('進銷存與日誌系統開發中')">⚙️ 進銷存與日誌管理</button>
     </div>
   </div>
@@ -51,20 +43,33 @@
   <div id="productListView" class="view-section">
     <h2>B2B 採購清單</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>
-    <div id="productContainer">
-      <p>載入商品中...</p>
-    </div>
+    <div id="productContainer"><p>載入商品中...</p></div>
     <button id="viewCartBtn" class="btn admin-btn" onclick="showCart()" style="position: sticky; bottom: 10px;">查看購物車 (0)</button>
   </div>
 
   <div id="cartView" class="view-section">
     <h2>購物車確認</h2>
     <button class="btn" onclick="switchView('productListView')" style="background:#7f8c8d; margin-bottom:15px;">繼續選購</button>
-    <div id="cartContainer" style="margin-bottom: 20px;">
-      <!-- 動態填入購物車明細 -->
-    </div>
+    <div id="cartContainer" style="margin-bottom: 20px;"></div>
     <h3 style="text-align: right; color: #e74c3c;">總計：$<span id="cartTotal">0</span></h3>
-    <button class="btn primary-btn" onclick="submitOrder()" id="submitOrderBtn">確認送出訂單 (待補簽名功能)</button>
+    
+    <!-- 線上簽名區塊 -->
+    <div id="signatureSection">
+      <h4>請在此簽名：</h4>
+      <div class="signature-wrapper">
+        <canvas id="signatureCanvas"></canvas>
+      </div>
+      <button class="btn" onclick="clearSignature()" style="background:#95a5a6; padding:5px; margin-top:0;">清除重簽</button>
+    </div>
+
+    <button class="btn primary-btn" onclick="submitOrder()" id="submitOrderBtn">確認送出訂單</button>
+  </div>
+
+  <!-- 新增：管理員接單系統 -->
+  <div id="adminOrderView" class="view-section">
+    <h2>待審核訂單列表</h2>
+    <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>
+    <div id="adminOrderContainer"><p>載入中...</p></div>
   </div>
 
   <script src="js/app.js"></script>

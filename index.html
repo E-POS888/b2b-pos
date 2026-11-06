@@ -38,7 +38,6 @@
     <hr>
     <div class="action-group">
       <h3>採購專區</h3>
-      <!-- 綁定點擊事件載入商品 -->
       <button class="btn" onclick="loadProducts()">前往瀏覽商品</button>
       <button class="btn" onclick="alert('訂單查詢開發中')">我的採購訂單</button>
     </div>
@@ -49,15 +48,23 @@
     </div>
   </div>
 
-  <!-- 新增：商品列表畫面 -->
   <div id="productListView" class="view-section">
     <h2>B2B 採購清單</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>
     <div id="productContainer">
-      <!-- 這裡會由 JS 動態填入商品卡片 -->
       <p>載入商品中...</p>
     </div>
-    <button class="btn admin-btn" onclick="alert('購物車開發中')" style="position: sticky; bottom: 10px;">查看購物車 (0)</button>
+    <button id="viewCartBtn" class="btn admin-btn" onclick="showCart()" style="position: sticky; bottom: 10px;">查看購物車 (0)</button>
+  </div>
+
+  <div id="cartView" class="view-section">
+    <h2>購物車確認</h2>
+    <button class="btn" onclick="switchView('productListView')" style="background:#7f8c8d; margin-bottom:15px;">繼續選購</button>
+    <div id="cartContainer" style="margin-bottom: 20px;">
+      <!-- 動態填入購物車明細 -->
+    </div>
+    <h3 style="text-align: right; color: #e74c3c;">總計：$<span id="cartTotal">0</span></h3>
+    <button class="btn primary-btn" onclick="submitOrder()" id="submitOrderBtn">確認送出訂單 (待補簽名功能)</button>
   </div>
 
   <script src="js/app.js"></script>

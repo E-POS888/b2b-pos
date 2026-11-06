@@ -128,7 +128,7 @@ function loadBuyerOrders() {
   });
 }
 
-// === 購物車與下單 ===
+// === 購物車與下單 (升級圖文版) ===
 function loadProducts() {
   switchView('productListView'); document.getElementById('productContainer').innerHTML = '<p>讀取中...</p>';
   fetch(`${GAS_URL}?action=getProducts`).then(res => res.json()).then(result => {
@@ -137,11 +137,17 @@ function loadProducts() {
       if (products.length === 0) return document.getElementById('productContainer').innerHTML = '<p>尚無商品。</p>';
       let html = '';
       products.forEach(p => {
-        let majorBadge = p.majorId ? `<span class="badge" style="background:#34495e;">${p.majorId}</span> ` : '';
-        html += `<div style="border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:5px;">
-            <h4>${majorBadge}${p.name}</h4><p style="font-size:12px; color:#7f8c8d;">SKU: ${p.sku}</p>
-            <p>批發價：$${p.price || 0} | 庫存：${p.availableQty || 0}</p>
-            <button class="btn" style="padding:5px; margin-top:5px;" onclick="addToCart('${p.sku}', '${p.name}', ${p.price})">加入購物車</button></div>`;
+        let catBadge = p.category ? `<span class="badge" style="background:#34495e; margin-right:5px;">${p.category}</span>` : '';
+        let imgHtml = p.imageUrl ? `<img src="${p.imageUrl}" class="product-img" alt="${p.name}">` : `<div class="empty-img">尚無圖片</div>`;
+        
+        html += `<div class="product-card">
+            ${imgHtml}
+            <h4 style="margin: 5px 0;">${catBadge}${p.name}</h4>
+            <p style="font-size:12px; color:#7f8c8d; margin:5px 0;">SKU: ${p.sku}</p>
+            <p class="product-desc">${p.description || '無商品描述'}</p>
+            <p style="font-weight:bold; color:#e74c3c;">批發價：$${p.price || 0} | 庫存：${p.availableQty || 0}</p>
+            <button class="btn" style="padding:8px; margin-top:10px;" onclick="addToCart('${p.sku}', '${p.name}', ${p.price})">加入購物車</button>
+          </div>`;
       });
       document.getElementById('productContainer').innerHTML = html; updateCartBtn();
     }
@@ -186,7 +192,6 @@ function submitOrder() {
   }).finally(() => { document.getElementById('submitOrderBtn').innerText = '確認送出訂單'; document.getElementById('submitOrderBtn').disabled = false; });
 }
 
-// 簽名板功能
 function initSignaturePad() {
   canvas = document.getElementById('signatureCanvas'); ctx = canvas.getContext('2d');
   canvas.addEventListener('mousedown', e => { isDrawing = true; drawStart(e.offsetX, e.offsetY); });
@@ -308,12 +313,11 @@ function submitPickingFinal() {
   }).finally(() => { document.getElementById('submitPickingBtn').innerText = '確認並完成理貨'; document.getElementById('submitPickingBtn').disabled = false; });
 }
 
-// === 新增：進階管理員大項目分類管理 ===
+// === 新增：類別管理邏輯 ===
 function loadAdminCategories() {
   switchView('adminCategoryView');
   document.getElementById('adminCategoryContainer').innerHTML = '<p>讀取清單中...</p>';
-  
-  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminMajorCategories', data: { uid: currentUser.uid } }) })
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminCategories', data: { uid: currentUser.uid } }) })
   .then(res => res.json()).then(result => {
     if (result.status === 'success') {
       if (result.data.length === 0) return document.getElementById('adminCategoryContainer').innerHTML = '<p>尚無分類資料。</p>';
@@ -321,7 +325,6 @@ function loadAdminCategories() {
       result.data.forEach(c => {
         let statusColor = (c.status === '啟用' || c.status === '上架') ? '#27ae60' : '#7f8c8d';
         let actionText = (c.status === '啟用' || c.status === '上架') ? '停用' : '啟用';
-        
         html += `<div class="order-card" style="border-left-color: ${statusColor};">
           <h4>${c.name}</h4>
           <p><strong>編號:</strong> ${c.id} | <strong>狀態:</strong> <span style="color:${statusColor}; font-weight:bold;">${c.status}</span></p>
@@ -333,37 +336,25 @@ function loadAdminCategories() {
     }
   });
 }
-
 document.getElementById('newCategoryForm').addEventListener('submit', function(e) {
   e.preventDefault();
-  const catData = {
-    uid: currentUser.uid,
-    name: document.getElementById('ncName').value.trim(),
-    note: document.getElementById('ncNote').value.trim()
-  };
-  
-  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'addMajorCategory', data: catData }) })
+  const catData = { uid: currentUser.uid, name: document.getElementById('ncName').value.trim(), note: document.getElementById('ncNote').value.trim() };
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'addCategory', data: catData }) })
   .then(res => res.json()).then(result => {
-    if (result.status === 'success') {
-      alert('分類新增成功！');
-      document.getElementById('newCategoryForm').reset();
-      loadAdminCategories(); 
-    } else alert('新增失敗：' + result.message);
+    if (result.status === 'success') { alert('分類新增成功！'); document.getElementById('newCategoryForm').reset(); loadAdminCategories(); } 
+    else alert('新增失敗：' + result.message);
   }).catch(err => alert('連線失敗'));
 });
-
 function toggleCategoryStatus(categoryId) {
-  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleMajorCategoryStatus', data: { uid: currentUser.uid, categoryId: categoryId } }) })
-  .then(res => res.json()).then(result => {
-    if (result.status === 'success') loadAdminCategories();
-  });
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleCategoryStatus', data: { uid: currentUser.uid, categoryId: categoryId } }) })
+  .then(res => res.json()).then(result => { if (result.status === 'success') loadAdminCategories(); });
 }
 
-// === 商品管理與大項目下拉選單 ===
-function fetchMajorCategories() {
-  const selectElement = document.getElementById('npMajorId');
+// === 商品管理與類別下拉選單 ===
+function fetchCategories() {
+  const selectElement = document.getElementById('npCategory');
   selectElement.innerHTML = '<option value="">讀取分類中...</option>';
-  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getMajorCategories' }) })
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getCategories' }) })
   .then(res => res.json()).then(result => {
     if (result.status === 'success') {
       let options = '<option value="">無分類</option>';
@@ -375,8 +366,7 @@ function fetchMajorCategories() {
 
 function loadAdminProducts() {
   switchView('adminProductView');
-  fetchMajorCategories(); 
-  
+  fetchCategories(); 
   document.getElementById('adminProductContainer').innerHTML = '<p>讀取清單中...</p>';
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminInventoryList', data: { uid: currentUser.uid } }) })
   .then(res => res.json()).then(result => {
@@ -386,12 +376,11 @@ function loadAdminProducts() {
       result.data.forEach(p => {
         let statusColor = (p.status === '上架' || p.status === '啟用') ? '#27ae60' : '#7f8c8d';
         let actionText = (p.status === '上架' || p.status === '啟用') ? '下架' : '上架';
-        let majorBadge = p.majorId ? `<span class="badge" style="background:#34495e;">${p.majorId}</span> ` : '';
-        
+        let catBadge = p.category ? `<span class="badge" style="background:#34495e;">${p.category}</span> ` : '';
         html += `<div class="order-card" style="border-left-color: ${statusColor};">
-          <h4>${majorBadge}${p.name}</h4>
+          <h4>${catBadge}${p.name}</h4>
           <p><strong>SKU:</strong> ${p.sku} | <strong>條碼:</strong> ${p.barcode}</p>
-          <p><strong>批發價:</strong> $${p.price} | <strong>實際庫存:</strong> ${p.actualStock}</p>
+          <p><strong>批發價:</strong> $${p.price} | <strong>庫存:</strong> ${p.actualStock}</p>
           <p><strong>狀態:</strong> <span style="color:${statusColor}; font-weight:bold;">${p.status}</span></p>
           <button class="btn" style="background:#34495e; padding:5px; margin-top:10px;" onclick="toggleProductStatus('${p.sku}')">切換為${actionText}</button>
         </div>`;
@@ -404,28 +393,19 @@ function loadAdminProducts() {
 document.getElementById('newProductForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const productData = {
-    uid: currentUser.uid,
-    name: document.getElementById('npName').value.trim(),
-    sku: document.getElementById('npSku').value.trim(),
-    barcode: document.getElementById('npBarcode').value.trim(),
-    majorId: document.getElementById('npMajorId').value,
-    price: document.getElementById('npPrice').value,
-    safeStock: document.getElementById('npSafeStock').value
+    uid: currentUser.uid, name: document.getElementById('npName').value.trim(), desc: document.getElementById('npDesc').value.trim(),
+    sku: document.getElementById('npSku').value.trim(), barcode: document.getElementById('npBarcode').value.trim(),
+    category: document.getElementById('npCategory').value, price: document.getElementById('npPrice').value,
+    safeStock: document.getElementById('npSafeStock').value, imageUrl: document.getElementById('npImage').value.trim()
   };
-  
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'addAdminProduct', data: productData }) })
   .then(res => res.json()).then(result => {
-    if (result.status === 'success') {
-      alert('商品新增成功！');
-      document.getElementById('newProductForm').reset();
-      loadAdminProducts(); 
-    } else alert('新增失敗：' + result.message);
+    if (result.status === 'success') { alert('商品新增成功！'); document.getElementById('newProductForm').reset(); loadAdminProducts(); } 
+    else alert('新增失敗：' + result.message);
   }).catch(err => alert('連線失敗'));
 });
 
 function toggleProductStatus(sku) {
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleProductStatus', data: { uid: currentUser.uid, sku: sku } }) })
-  .then(res => res.json()).then(result => {
-    if (result.status === 'success') loadAdminProducts();
-  });
+  .then(res => res.json()).then(result => { if (result.status === 'success') loadAdminProducts(); });
 }

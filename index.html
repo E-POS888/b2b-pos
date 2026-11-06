@@ -9,9 +9,8 @@
 </head>
 <body>
 
-  <!-- 代客下單橫幅 (預設隱藏) -->
   <div id="proxyBanner" style="display: none; background: #e67e22; color: white; padding: 10px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 100;">
-    👨‍💼 代客下單模式：為客戶 <span id="proxyClientName"></span> 選購中
+    👨‍💼 代客下單模式：為客戶 <span id="proxyClientName"></span> 操作中
     <button onclick="exitProxyMode()" style="margin-left: 10px; padding: 2px 8px; cursor: pointer;">退出</button>
   </div>
 
@@ -36,21 +35,20 @@
     <div class="action-group">
       <h3>採購專區</h3>
       <button class="btn" onclick="loadProducts()">前往瀏覽商品</button>
-      <button class="btn" onclick="alert('訂單查詢開發中')">我的採購訂單</button>
+      <!-- 修正按鈕對接歷史訂單 -->
+      <button class="btn" onclick="loadBuyerOrders()">我的採購訂單</button>
     </div>
     <div id="adminPanel" class="action-group" style="display: none;">
       <h3>管理員專區</h3>
       <button class="btn admin-btn" onclick="loadAdminOrders()">📦 訂單管理與接單</button>
       <button class="btn admin-btn" style="background-color: #27ae60;" onclick="showEnterPickingOrder()">🔍 掃碼理貨系統</button>
-      <!-- 新增：代客下單與異常專區 -->
-      <button class="btn admin-btn" style="background-color: #8e44ad;" onclick="switchView('proxySetupView')">👨‍💼 代客建檔與下單</button>
+      <button class="btn admin-btn" style="background-color: #8e44ad;" onclick="switchView('proxySetupView')">👨‍💼 代客建檔與操作</button>
       <button class="btn admin-btn-danger" onclick="loadAnomalyOrders()">⚠️ 缺貨異常專區</button>
     </div>
   </div>
 
-  <!-- 新增：代客下單前置作業 -->
   <div id="proxySetupView" class="view-section">
-    <h2>代客建檔與下單</h2>
+    <h2>代客建檔與操作</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回後台</button>
     <label>請輸入客戶手機號碼進行搜尋：</label>
     <input type="tel" id="proxyPhoneInput" placeholder="例如：0912345678">
@@ -60,7 +58,7 @@
       <h4 style="color: #e74c3c;">查無此客戶，請快速建檔</h4>
       <label>公司名稱*</label><input type="text" id="proxyRegCompany">
       <label>負責人姓名*</label><input type="text" id="proxyRegManager">
-      <button class="btn admin-btn" onclick="createProxyMember()">建檔並開始代客下單</button>
+      <button class="btn admin-btn" onclick="createProxyMember()">建檔並開始代客操作</button>
     </div>
   </div>
 
@@ -83,6 +81,13 @@
     </div>
     <button class="btn primary-btn" onclick="submitOrder()" id="submitOrderBtn">確認送出訂單</button>
   </div>
+  
+  <!-- 新增：買方歷史訂單畫面 -->
+  <div id="buyerOrderHistoryView" class="view-section">
+    <h2>歷史採購紀錄</h2>
+    <button class="btn" onclick="handleReturnFromProducts()" style="background:#7f8c8d; margin-bottom:15px;">返回</button>
+    <div id="buyerOrderContainer"><p>載入中...</p></div>
+  </div>
 
   <div id="adminOrderView" class="view-section">
     <h2>待審核訂單列表</h2>
@@ -90,7 +95,6 @@
     <div id="adminOrderContainer"><p>載入中...</p></div>
   </div>
   
-  <!-- 新增：缺貨異常專區 -->
   <div id="anomalyOrderView" class="view-section">
     <h2 style="color: #c0392b;">⚠️ 缺貨異常專區</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>

@@ -2,9 +2,9 @@ const LIFF_ID = '2012296480-FSAclNbs';
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxYx_h3YGtJ7chIJGWSVxFxMmR5rdyAirXF-Uo658iak_UjLOP3j4Z95YWinE5x-emFPg/exec';
 
 let currentUser = { uid: null, displayName: null };
-let myOwnProfile = {}; // 紀錄管理員原本的真實身分
-let currentProfile = {}; // 目前操作中的身分 (可能是客戶)
-let isProxyMode = false; // 是否在代客下單模式
+let myOwnProfile = {}; 
+let currentProfile = {}; 
+let isProxyMode = false; 
 let shoppingCart = []; 
 let timeoutTimer;
 let currentPickingOrder = ''; let pickingItems = [];
@@ -65,11 +65,7 @@ function searchProxyMember() {
   const phone = document.getElementById('proxyPhoneInput').value.trim();
   if(!phone) return alert('請輸入手機號碼');
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'searchMemberByPhone', data: { phone: phone } }) }).then(res=>res.json()).then(result=>{
-    if(result.data.found) {
-      enterProxyMode(result.data.profile);
-    } else {
-      document.getElementById('proxyCreateForm').style.display = 'block';
-    }
+    if(result.data.found) { enterProxyMode(result.data.profile); } else { document.getElementById('proxyCreateForm').style.display = 'block'; }
   });
 }
 function createProxyMember() {
@@ -86,7 +82,7 @@ function enterProxyMode(profile) {
   document.getElementById('proxyBanner').style.display = 'block';
   document.getElementById('proxyClientName').innerText = profile.companyName;
   document.getElementById('proxyCreateForm').style.display = 'none';
-  loadProducts();
+  switchView('dashboardView'); 
 }
 function exitProxyMode() {
   currentProfile = myOwnProfile; isProxyMode = false; shoppingCart = [];
@@ -94,7 +90,46 @@ function exitProxyMode() {
   switchView('dashboardView');
 }
 function handleReturnFromProducts() {
-  if (isProxyMode) exitProxyMode(); else switchView('dashboardView');
+  if (isProxyMode) switchView('dashboardView'); else switchView('dashboardView');
+}
+
+// === 歷史訂單查詢 (支援買方與代客) ===
+function loadBuyerOrders() {
+  switchView('buyerOrderHistoryView');
+  const container = document.getElementById('buyerOrderContainer');
+  container.innerHTML = '<p>讀取歷史紀錄中...</p>';
+  
+  fetch(GAS_URL, { 
+    method: 'POST', 
+    body: JSON.stringify({ action: 'getBuyerOrders', data: { memberId: currentProfile.memberId } }) 
+  }).then(res => res.json()).then(result => {
+    if (result.status === 'success') {
+      const orders = result.data;
+      if (orders.length === 0) return container.innerHTML = '<p>目前尚無採購紀錄。</p>';
+      
+      let html = '';
+      orders.forEach(o => {
+        let itemsHtml = o.items.map(i => `${i.name} x${i.qty}`).join('<br>');
+        let statusColor = o.status.includes('異常') ? '#e74c3c' : (o.status.includes('完成') ? '#27ae60' : '#f39c12');
+        html += `<div class="order-card">
+          <h4>單號: ${o.orderId}</h4>
+          <p><strong>下單時間：</strong>${new Date(o.time).toLocaleString()}</p>
+          <p><strong>處理狀態：</strong><span style="color: ${statusColor}; font-weight: bold;">${o.status}</span></p>
+          <p><strong>總金額：</strong>$${o.totalAmount}</p>
+          <div style="background:#f9f9f9; padding: 10px; font-size: 14px; margin: 10px 0; border-radius: 4px;">
+            <strong>採購明細：</strong><br>${itemsHtml}
+          </div>
+          <div style="text-align:center; padding:5px; border-top: 1px dashed #ccc;">
+            <p style="margin:5px 0; font-size:12px; color: #7f8c8d;">當時留存簽名</p>
+            <img src="${o.signature}" style="max-height: 50px; max-width: 100%; border-radius: 4px; background: #fff;">
+          </div>
+        </div>`;
+      });
+      container.innerHTML = html;
+    } else {
+      container.innerHTML = `<p style="color:red;">讀取失敗：${result.message}</p>`;
+    }
+  }).catch(err => container.innerHTML = `<p style="color:red;">連線錯誤</p>`);
 }
 
 // === 購物車與下單 ===
@@ -148,7 +183,7 @@ function submitOrder() {
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'submitOrder', data: orderData }) }).then(res => res.json()).then(result => {
     if (result.status === 'success') {
       alert(result.data.message); shoppingCart = []; clearSignature();
-      if(isProxyMode) exitProxyMode(); else switchView('dashboardView');
+      switchView('dashboardView');
     } else alert('下單失敗：' + result.message);
   }).finally(() => { document.getElementById('submitOrderBtn').innerText = '確認送出訂單'; document.getElementById('submitOrderBtn').disabled = false; });
 }
@@ -192,7 +227,6 @@ function approveOrder(orderId) {
     if (result.status === 'success') { alert('核准成功！'); loadAdminOrders(); } 
   });
 }
-
 function loadAnomalyOrders() {
   switchView('anomalyOrderView'); document.getElementById('anomalyOrderContainer').innerHTML = '<p>讀取異常清單中...</p>';
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAnomalyOrders', data: { uid: currentUser.uid } }) }).then(res => res.json()).then(result => {
@@ -262,18 +296,15 @@ function manualAdjustQty(index, amount) {
   renderPickingList(); document.getElementById('barcodeListener').focus(); 
 }
 function submitPickingFinal() {
-  // === 新增：異常防呆與手動確認邏輯 ===
   let hasShortage = false;
   for(let item of pickingItems) { if(item.actualQty < item.targetQty) hasShortage = true; }
-  
   if (hasShortage) {
     const isAnomalyConfirmed = confirm('⚠️ 檢測到少撿貨！\n請確認是否為「缺貨/異常」？\n\n點擊【確定】：確認異常，進入缺貨異常專區。\n點擊【取消】：返回繼續理貨。');
-    if (!isAnomalyConfirmed) return; // 點擊取消，中斷送出，讓員工繼續理貨
+    if (!isAnomalyConfirmed) return; 
   } else {
     const isConfirm = confirm('實撿數量正確，確定要完成理貨並送出結果嗎？');
     if(!isConfirm) return;
   }
-  
   document.getElementById('submitPickingBtn').innerText = '資料上傳中...'; document.getElementById('submitPickingBtn').disabled = true;
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'submitPickingResult', data: { uid: currentUser.uid, orderId: currentPickingOrder, results: pickingItems } }) })
   .then(res => res.json()).then(result => {

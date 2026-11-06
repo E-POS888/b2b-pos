@@ -122,7 +122,6 @@
     <button class="btn primary-btn" onclick="submitPickingFinal()" id="submitPickingBtn" style="margin-top: 20px;">確認並完成理貨</button>
   </div>
 
-  <!-- 項目類別管理介面 -->
   <div id="adminCategoryView" class="view-section">
     <h2>項目類別管理</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>
@@ -138,17 +137,15 @@
     <div id="adminCategoryContainer"><p>載入中...</p></div>
   </div>
 
-  <!-- 商品建檔管理介面 -->
   <div id="adminProductView" class="view-section">
     <h2>商品建檔與管理</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#7f8c8d; margin-bottom:15px;">返回首頁</button>
-    
     <div style="background: #ecf0f1; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
       <h3 style="margin-top: 0;">➕ 新增商品</h3>
       <form id="newProductForm">
         <label>商品圖片網址 (選填)</label><input type="url" id="npImage" placeholder="https://...">
         <label>項目類別</label>
-        <select id="npCategory" style="width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+        <select id="npCategory">
           <option value="">無分類</option>
         </select>
         <label>商品名稱*</label><input type="text" id="npName" required>
@@ -160,7 +157,6 @@
         <button type="submit" class="btn primary-btn">新增商品</button>
       </form>
     </div>
-
     <h3>現有商品清單</h3>
     <div id="adminProductContainer"><p>載入中...</p></div>
   </div>

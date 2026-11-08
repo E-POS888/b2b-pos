@@ -1,5 +1,36 @@
-// js/seller.js - 處理訂單審核、掃碼理貨、異常防呆
+// js/seller.js - 處理門市銷售、接單理貨、異常防呆、與代客操作
 
+// === 移入並更新：代客操作模組 (門市人員共用) ===
+function searchProxyMember() {
+  const phone = document.getElementById('proxyPhoneInput').value.trim();
+  if(!phone) return alert('請輸入手機號碼');
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'searchMemberByPhone', data: { phone: phone } }) }).then(res=>res.json()).then(result=>{
+    if(result.data.found) { enterProxyMode(result.data.profile); } else { document.getElementById('proxyCreateForm').style.display = 'block'; }
+  });
+}
+function createProxyMember() {
+  const phone = document.getElementById('proxyPhoneInput').value.trim();
+  const company = document.getElementById('proxyRegCompany').value.trim();
+  const manager = document.getElementById('proxyRegManager').value.trim();
+  const taxId = document.getElementById('proxyRegTaxId').value.trim(); // 接收統編
+  const address = document.getElementById('proxyRegAddress').value.trim(); // 接收地址
+  if(!company || !manager) return alert('請填寫公司與負責人');
+  
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCreateMember', data: { phone: phone, companyName: company, managerName: manager, taxId: taxId, address: address } }) }).then(res=>res.json()).then(result=>{
+    if(result.data.success) { enterProxyMode(result.data.profile); }
+  });
+}
+function enterProxyMode(profile) {
+  currentProfile = profile; isProxyMode = true; shoppingCart = [];
+  document.getElementById('proxyBanner').style.display = 'block'; document.getElementById('proxyClientName').innerText = profile.companyName;
+  document.getElementById('proxyCreateForm').style.display = 'none'; switchView('dashboardView'); 
+}
+function exitProxyMode() {
+  currentProfile = myOwnProfile; isProxyMode = false; shoppingCart = [];
+  document.getElementById('proxyBanner').style.display = 'none'; switchView('dashboardView');
+}
+
+// === 原理貨與接單邏輯 ===
 function loadAdminOrders() {
   switchView('adminOrderView'); document.getElementById('adminOrderContainer').innerHTML = '<p style="text-align:center; color:#8C7A6B;">讀取中...</p>';
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminOrders', data: { uid: currentUser.uid } }) }).then(res => res.json()).then(result => {
@@ -14,7 +45,6 @@ function loadAdminOrders() {
     }
   });
 }
-
 function approveOrder(orderId) {
   if(!confirm(`確定核准 ${orderId} 嗎？`)) return;
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'approveOrder', data: { uid: currentUser.uid, orderId: orderId } }) }).then(res => res.json()).then(result => {
@@ -37,7 +67,6 @@ function loadAnomalyOrders() {
     }
   });
 }
-
 function forceShipAnomaly(orderId) {
   if(!confirm(`確認要照常發貨並結案嗎？`)) return;
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'forceShipAnomalyOrder', data: { uid: currentUser.uid, orderId: orderId } }) }).then(res => res.json()).then(result => {
@@ -46,7 +75,6 @@ function forceShipAnomaly(orderId) {
 }
 
 function showEnterPickingOrder() { switchView('enterPickingOrderView'); document.getElementById('targetOrderIdInput').value = ''; }
-
 function startPicking() {
   const orderId = document.getElementById('targetOrderIdInput').value.trim();
   if(!orderId) return alert('請輸入單號');
@@ -58,7 +86,6 @@ function startPicking() {
     } else { alert(result.message); document.getElementById('targetOrderIdInput').value = ''; }
   });
 }
-
 function renderPickingList() {
   document.getElementById('pickingOrderIdText').innerText = currentPickingOrder;
   let html = '';
@@ -73,7 +100,6 @@ function renderPickingList() {
   });
   document.getElementById('pickingListContainer').innerHTML = html;
 }
-
 function initBarcodeListener() {
   const listener = document.getElementById('barcodeListener');
   listener.addEventListener('keypress', function(e) {
@@ -81,7 +107,6 @@ function initBarcodeListener() {
   });
   document.getElementById('pickingProcessView').addEventListener('click', () => { if(window.getSelection().toString() === '') listener.focus(); });
 }
-
 function processScannedBarcode(barcode) {
   let found = false;
   for (let i = 0; i < pickingItems.length; i++) {
@@ -89,12 +114,10 @@ function processScannedBarcode(barcode) {
   }
   if (found) renderPickingList(); else alert(`❌ 此訂單不需要條碼為 [${barcode}] 的商品！`);
 }
-
 function manualAdjustQty(index, amount) {
   pickingItems[index].actualQty += amount; if (pickingItems[index].actualQty < 0) pickingItems[index].actualQty = 0;
   renderPickingList(); document.getElementById('barcodeListener').focus(); 
 }
-
 function submitPickingFinal() {
   let hasShortage = false;
   for(let item of pickingItems) { if(item.actualQty < item.targetQty) hasShortage = true; }

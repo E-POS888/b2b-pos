@@ -47,7 +47,7 @@ function saveMemberUpdate(targetPhone, roleSelectId, levelSelectId) {
   });
 }
 
-// === 類別管理 ===
+// === 類別管理與編輯 ===
 function loadAdminCategories() {
   switchView('adminCategoryView'); document.getElementById('adminCategoryContainer').innerHTML = '<p style="text-align:center;">讀取清單中...</p>';
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminCategories', data: { uid: currentUser.uid } }) }).then(res => res.json()).then(result => {
@@ -57,15 +57,24 @@ function loadAdminCategories() {
       result.data.forEach(c => {
         let statusColor = (c.status === '啟用' || c.status === '上架') ? '#799C76' : '#8C7A6B';
         let actionText = (c.status === '啟用' || c.status === '上架') ? '停用' : '啟用';
+        // 對單引號進行轉義，避免 onclick 解析錯誤
+        let safeName = c.name.replace(/'/g, "\\'");
+        let safeNote = c.note ? c.note.replace(/'/g, "\\'") : '';
         html += `<div class="order-card" style="border-left-color: ${statusColor};">
           <h4>${c.name}</h4><p><strong>狀態:</strong> <span style="color:${statusColor}; font-weight:bold;">${c.status}</span></p>
-          <button class="btn" style="background:#E8DED1; color:#4A4036; padding:8px; margin-top:10px;" onclick="toggleCategoryStatus('${c.id}')">切換為${actionText}</button>
+          <p style="font-size: 13px; color: #555;">詳細介紹/備註: <br>${c.note || '無'}</p>
+          
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <button class="btn" style="background:#A38C75; padding:8px; margin-top:0; flex:1;" onclick="openEditCategory('${c.id}', '${safeName}', '${safeNote}')">編輯內容</button>
+            <button class="btn" style="background:#E8DED1; color:#4A4036; padding:8px; margin-top:0; flex:1;" onclick="toggleCategoryStatus('${c.id}')">切換為${actionText}</button>
+          </div>
         </div>`;
       });
       document.getElementById('adminCategoryContainer').innerHTML = html;
     }
   });
 }
+
 document.getElementById('newCategoryForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const catData = { uid: currentUser.uid, name: document.getElementById('ncName').value.trim(), note: document.getElementById('ncNote').value.trim() };
@@ -73,11 +82,30 @@ document.getElementById('newCategoryForm').addEventListener('submit', function(e
     if (result.status === 'success') { alert('分類新增成功！'); document.getElementById('newCategoryForm').reset(); loadAdminCategories(); } 
   });
 });
+
 function toggleCategoryStatus(categoryId) {
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleCategoryStatus', data: { uid: currentUser.uid, categoryId: categoryId } }) }).then(res => res.json()).then(result => { if (result.status === 'success') loadAdminCategories(); });
 }
 
-// === 商品管理 ===
+function openEditCategory(id, name, note) {
+  document.getElementById('ecId').value = id;
+  document.getElementById('ecName').value = name;
+  document.getElementById('ecNote').value = note;
+  switchView('editCategoryView');
+}
+
+document.getElementById('editCategoryForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const data = {
+    uid: currentUser.uid, categoryId: document.getElementById('ecId').value,
+    name: document.getElementById('ecName').value.trim(), note: document.getElementById('ecNote').value.trim()
+  };
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'updateCategory', data: data }) }).then(res => res.json()).then(result => {
+    if (result.status === 'success') { alert('更新成功！'); loadAdminCategories(); } else alert('更新失敗');
+  });
+});
+
+// === 商品管理與獨立圖片上傳 ===
 function fetchCategories() {
   const selectElement = document.getElementById('npCategory');
   selectElement.innerHTML = '<option value="">讀取分類中...</option>';
@@ -87,9 +115,17 @@ function fetchCategories() {
     }
   });
 }
+
 function loadAdminProducts() {
   switchView('adminProductView'); fetchCategories(); 
   document.getElementById('adminProductContainer').innerHTML = '<p style="text-align:center;">讀取清單中...</p>';
+  
+  // 清空圖片預覽區
+  document.getElementById('npFileInput').value = '';
+  document.getElementById('imagePreviewContainer').style.display = 'none';
+  document.getElementById('npImage').value = '';
+  window.tempImageBase64 = null;
+  
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminInventoryList', data: { uid: currentUser.uid } }) }).then(res => res.json()).then(result => {
     if (result.status === 'success') {
       if (result.data.length === 0) return document.getElementById('adminProductContainer').innerHTML = '<p style="text-align:center;">尚無商品資料。</p>';
@@ -110,6 +146,55 @@ function loadAdminProducts() {
     }
   });
 }
+
+// 圖片選擇器監聽：讀取圖片並顯示預覽
+document.getElementById('npFileInput').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e2) {
+    document.getElementById('npImagePreview').src = e2.target.result;
+    document.getElementById('imagePreviewContainer').style.display = 'block';
+    
+    window.tempImageBase64 = e2.target.result.split(',')[1];
+    window.tempImageMime = file.type;
+    window.tempImageName = file.name;
+    
+    // 重置上傳按鈕狀態
+    const btn = document.getElementById('uploadImgBtn');
+    btn.innerText = '確認上傳照片'; btn.disabled = false; btn.style.background = '#A38C75';
+  };
+  reader.readAsDataURL(file);
+});
+
+// 獨立執行上傳圖片動作
+function uploadProductImage() {
+  if(!window.tempImageBase64) return alert('請先選擇照片檔案');
+  
+  const btn = document.getElementById('uploadImgBtn');
+  btn.innerText = '圖片上傳中...'; btn.disabled = true;
+  
+  fetch(GAS_URL, { 
+    method: 'POST', 
+    body: JSON.stringify({ 
+      action: 'uploadImage', 
+      data: { uid: currentUser.uid, base64: window.tempImageBase64, mimeType: window.tempImageMime, filename: window.tempImageName }
+    })
+  })
+  .then(res => res.json()).then(res => {
+    if(res.status === 'success') {
+      document.getElementById('npImage').value = res.data.url; // 將回傳的真實網址塞入隱藏欄位
+      alert('照片上傳成功！現在可繼續填寫其他商品資訊。');
+      btn.innerText = '✅ 上傳完成'; btn.style.background = '#799C76';
+    } else { 
+      alert('上傳失敗：' + res.message); 
+      btn.innerText = '重新上傳照片'; btn.disabled = false; 
+    }
+  }).catch(err => {
+    alert('連線失敗'); btn.innerText = '重新上傳照片'; btn.disabled = false; 
+  });
+}
+
 document.getElementById('newProductForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const productData = {
@@ -119,36 +204,33 @@ document.getElementById('newProductForm').addEventListener('submit', function(e)
     safeStock: document.getElementById('npSafeStock').value, imageUrl: document.getElementById('npImage').value.trim(),
     levelLimit: document.getElementById('npLevelLimit').value
   };
+  
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'addAdminProduct', data: productData }) }).then(res => res.json()).then(result => {
-    if (result.status === 'success') { alert('商品新增成功！'); document.getElementById('newProductForm').reset(); loadAdminProducts(); } 
+    if (result.status === 'success') { 
+      alert('商品建檔成功！'); document.getElementById('newProductForm').reset(); loadAdminProducts(); 
+    } 
   });
 });
+
 function toggleProductStatus(sku) { fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleProductStatus', data: { uid: currentUser.uid, sku: sku } }) }).then(res => res.json()).then(result => { if (result.status === 'success') loadAdminProducts(); }); }
 
 // === 系統操作日誌與進出貨查詢 ===
 let currentLogType = 'action';
 
 function loadSystemLogs() {
-  switchView('systemLogsView');
-  switchLogTab('action'); 
+  switchView('systemLogsView'); switchLogTab('action'); 
 }
 
 function switchLogTab(type) {
   currentLogType = type;
-  const actionBtn = document.getElementById('tabActionLogBtn');
-  const inventoryBtn = document.getElementById('tabInventoryLogBtn');
-  const container = document.getElementById('logContainer');
+  const actionBtn = document.getElementById('tabActionLogBtn'); const inventoryBtn = document.getElementById('tabInventoryLogBtn'); const container = document.getElementById('logContainer');
   
   if (type === 'action') {
-    actionBtn.style.background = '#8B6B4A'; actionBtn.style.color = '#FFF';
-    inventoryBtn.style.background = '#E8DED1'; inventoryBtn.style.color = '#4A4036';
-    container.innerHTML = '<p style="text-align:center;">讀取操作日誌中...</p>';
-    fetchActionLogs(container);
+    actionBtn.style.background = '#8B6B4A'; actionBtn.style.color = '#FFF'; inventoryBtn.style.background = '#E8DED1'; inventoryBtn.style.color = '#4A4036';
+    container.innerHTML = '<p style="text-align:center;">讀取操作日誌中...</p>'; fetchActionLogs(container);
   } else {
-    inventoryBtn.style.background = '#8B6B4A'; inventoryBtn.style.color = '#FFF';
-    actionBtn.style.background = '#E8DED1'; actionBtn.style.color = '#4A4036';
-    container.innerHTML = '<p style="text-align:center;">讀取當月進出貨明細中...</p>';
-    fetchInventoryHistory(container);
+    inventoryBtn.style.background = '#8B6B4A'; inventoryBtn.style.color = '#FFF'; actionBtn.style.background = '#E8DED1'; actionBtn.style.color = '#4A4036';
+    container.innerHTML = '<p style="text-align:center;">讀取當月進出貨明細中...</p>'; fetchInventoryHistory(container);
   }
 }
 

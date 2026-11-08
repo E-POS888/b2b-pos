@@ -9,7 +9,6 @@
 </head>
 <body>
 
-  <!-- 代客下單橫幅 -->
   <div id="proxyBanner" style="display: none; background: #C19A6B; color: white; padding: 10px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
     代客操作模式：為客戶 <span id="proxyClientName"></span> 選購中
     <button onclick="exitProxyMode()" style="margin-left: 10px; padding: 4px 12px; cursor: pointer; border:none; border-radius:4px; background:#FFF; color:#8B6B4A; font-weight:bold;">退出</button>
@@ -49,10 +48,8 @@
       <button class="btn" style="background-color: #E8DED1; color: #4A4036;" onclick="loadEditProfile()">修改個人資料</button>
     </div>
 
-    <!-- 將代客建檔按鈕移至門市銷售作業 (一般管理員可用) -->
     <div id="sellerPanel" class="action-group" style="display: none; margin-top: 25px;">
       <h3>門市銷售作業</h3>
-      <button class="btn admin-btn" style="background-color: #A38C75;" onclick="switchView('proxySetupView')">👨‍💼 代客建檔與操作</button>
       <button class="btn admin-btn" onclick="loadAdminOrders()">📦 訂單審核與接單</button>
       <button class="btn admin-btn" style="background-color: #799C76;" onclick="showEnterPickingOrder()">🔍 掃碼理貨系統</button>
       <button class="btn admin-btn-danger" onclick="loadAnomalyOrders()">⚠️ 缺貨異常專區</button>
@@ -60,6 +57,7 @@
 
     <div id="advancedAdminPanel" class="action-group" style="display: none; margin-top: 25px;">
       <h3>進階後台管理</h3>
+      <button class="btn admin-btn" style="background-color: #A38C75;" onclick="switchView('proxySetupView')">👨‍💼 代客建檔與操作</button>
       <button class="btn" style="background-color: #4A4036;" onclick="loadAdminMembers()">👥 會員與權限管理</button>
       <button class="btn" style="background-color: #4A4036;" onclick="loadAdminCategories()">📂 項目類別管理</button>
       <button class="btn" style="background-color: #4A4036;" onclick="loadAdminProducts()">⚙️ 商品進銷存管理</button>
@@ -80,7 +78,6 @@
     </form>
   </div>
 
-  <!-- 修改：補齊代客建檔表單資料 -->
   <div id="proxySetupView" class="view-section">
     <h2>代客建檔與操作</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回後台</button>
@@ -88,11 +85,9 @@
     <input type="tel" id="proxyPhoneInput" placeholder="0912345678">
     <button class="btn primary-btn" onclick="searchProxyMember()">搜尋客戶</button>
     <div id="proxyCreateForm" style="display: none; margin-top: 20px; padding: 20px; background: #FCFBF9; border-radius: 12px; border: 1px solid #E8DED1;">
-      <h4 style="color: #D47C7C; text-align: center; margin-top:0;">查無此客戶，請完整建檔</h4>
+      <h4 style="color: #D47C7C; text-align: center; margin-top:0;">查無此客戶，請快速建檔</h4>
       <label>公司名稱*</label><input type="text" id="proxyRegCompany">
       <label>負責人姓名*</label><input type="text" id="proxyRegManager">
-      <label>統一編號</label><input type="text" id="proxyRegTaxId">
-      <label>預設送貨地址</label><input type="text" id="proxyRegAddress">
       <button class="btn primary-btn" onclick="createProxyMember()">建檔並開始代客操作</button>
     </div>
   </div>
@@ -158,6 +153,7 @@
     <button class="btn primary-btn" onclick="submitPickingFinal()" id="submitPickingBtn" style="margin-top: 25px;">確認並完成理貨</button>
   </div>
 
+  <!-- 項目類別管理 -->
   <div id="adminCategoryView" class="view-section">
     <h2>項目類別管理</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回</button>
@@ -165,7 +161,7 @@
       <h3 style="margin-top: 0; border:none;">➕ 新增類別</h3>
       <form id="newCategoryForm">
         <label>類別名稱*</label><input type="text" id="ncName" required>
-        <label>備註說明</label><input type="text" id="ncNote">
+        <label>詳細介紹 / 備註說明</label><textarea id="ncNote" rows="3" style="resize:vertical;"></textarea>
         <button type="submit" class="btn primary-btn">建立新類別</button>
       </form>
     </div>
@@ -173,17 +169,42 @@
     <div id="adminCategoryContainer"><p style="text-align:center; color:#8C7A6B;">載入中...</p></div>
   </div>
 
+  <!-- 新增：編輯項目類別專區 -->
+  <div id="editCategoryView" class="view-section">
+    <h2>編輯項目類別</h2>
+    <button class="btn" onclick="loadAdminCategories()" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">取消編輯</button>
+    <div style="background: #FCFBF9; padding: 20px; border-radius: 12px; box-shadow: var(--shadow-card);">
+      <form id="editCategoryForm">
+        <input type="hidden" id="ecId">
+        <label>類別名稱*</label><input type="text" id="ecName" required>
+        <label>詳細介紹 / 備註說明</label><textarea id="ecNote" rows="3" style="resize:vertical;"></textarea>
+        <button type="submit" class="btn primary-btn">儲存變更</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 商品建檔管理 -->
   <div id="adminProductView" class="view-section">
     <h2>商品建檔與管理</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回</button>
     <div style="background: #FCFBF9; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: var(--shadow-card);">
       <h3 style="margin-top: 0; border:none;">➕ 新增商品</h3>
       <form id="newProductForm">
-        <label>圖片網址 (選填)</label><input type="url" id="npImage" placeholder="https://...">
-        <label>項目類別</label>
-        <select id="npCategory"><option value="">無分類</option></select>
+        
+        <!-- 修改 1：商品名稱第一，類別第二 -->
         <label>商品名稱*</label><input type="text" id="npName" required>
-        <label>商品描述</label><input type="text" id="npDesc">
+        <label>項目類別</label><select id="npCategory"><option value="">無分類</option></select>
+        
+        <!-- 修改 2：獨立圖片上傳模組 -->
+        <label>商品照片</label>
+        <input type="file" id="npFileInput" accept="image/*">
+        <div id="imagePreviewContainer" class="img-preview-box" style="display:none;">
+          <img id="npImagePreview">
+          <button type="button" class="btn" id="uploadImgBtn" style="background:#A38C75; padding:8px; margin-top:10px;" onclick="uploadProductImage()">確認上傳照片</button>
+        </div>
+        <input type="hidden" id="npImage"> <!-- 接收上傳成功後的真實網址 -->
+
+        <label>商品描述</label><textarea id="npDesc" rows="3" style="resize:vertical;"></textarea>
         <label>SKU (唯一貨號)*</label><input type="text" id="npSku" required>
         <label>掃描條碼</label><input type="text" id="npBarcode">
         <label>批發價*</label><input type="number" id="npPrice" required>
@@ -194,7 +215,9 @@
           <option value="VIP會員">VIP會員專屬</option>
           <option value="VVIP會員">VVIP會員專屬</option>
         </select>
-        <button type="submit" class="btn primary-btn">新增商品</button>
+        
+        <!-- 最後送出商品建檔 -->
+        <button type="submit" class="btn primary-btn" style="margin-top: 25px;">確認新增商品建檔</button>
       </form>
     </div>
     <h3>現有商品清單</h3>

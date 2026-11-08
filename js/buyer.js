@@ -2,7 +2,16 @@
 
 function loadProducts() {
   switchView('productListView'); document.getElementById('productContainer').innerHTML = '<p style="text-align:center; color:#8C7A6B;">讀取中...</p>';
-  fetch(`${GAS_URL}?action=getProducts`).then(res => res.json()).then(result => {
+  
+  // 將目前的會員等級傳給後端過濾隱藏商品
+  const myLevel = currentProfile.memberLevel || '一般會員';
+  
+  // 設定折扣折數
+  let discountRate = 1;
+  if (myLevel === 'VIP會員') discountRate = 0.95;
+  else if (myLevel === 'VVIP會員') discountRate = 0.90;
+
+  fetch(`${GAS_URL}?action=getProducts&level=${myLevel}`).then(res => res.json()).then(result => {
     if (result.status === 'success') {
       const products = result.data;
       if (products.length === 0) return document.getElementById('productContainer').innerHTML = '<p style="text-align:center;">尚無商品。</p>';
@@ -10,13 +19,25 @@ function loadProducts() {
       products.forEach(p => {
         let catBadge = p.category ? `<span class="badge" style="background:#A38C75; margin-right:6px;">${p.category}</span>` : '';
         let imgHtml = p.imageUrl ? `<img src="${p.imageUrl}" class="product-img" alt="${p.name}">` : `<div class="empty-img">暫無圖片</div>`;
+        
+        // 折扣計算邏輯
+        let originalPrice = Number(p.price || 0);
+        let finalPrice = Math.round(originalPrice * discountRate);
+        let priceHtml = '';
+        if (discountRate < 1) {
+          priceHtml = `<span style="text-decoration: line-through; color:#8C7A6B; font-size:13px; margin-right:5px;">$${originalPrice}</span>
+                       <span style="color:#D47C7C;">專屬價 $${finalPrice}</span>`;
+        } else {
+          priceHtml = `批發價：$${originalPrice}`;
+        }
+
         html += `<div class="product-card">
             ${imgHtml}
             <h4 style="margin: 8px 0; text-align:left;">${catBadge}${p.name}</h4>
             <p style="font-size:13px; color:#8C7A6B; margin:4px 0;">SKU: ${p.sku}</p>
             <p class="product-desc">${p.description || '無詳細描述'}</p>
-            <p style="font-weight:700; color:#8B6B4A; font-size:16px;">批發價：$${p.price || 0} <span style="font-size:13px; font-weight:normal; color:#8C7A6B;">| 庫存：${p.availableQty || 0}</span></p>
-            <button class="btn primary-btn" style="padding:10px; margin-top:12px;" onclick="addToCart('${p.sku}', '${p.name}', ${p.price})">加入購物車</button>
+            <p style="font-weight:700; color:#8B6B4A; font-size:16px;">${priceHtml} <span style="font-size:13px; font-weight:normal; color:#8C7A6B;">| 庫存：${p.availableQty || 0}</span></p>
+            <button class="btn primary-btn" style="padding:10px; margin-top:12px;" onclick="addToCart('${p.sku}', '${p.name}', ${finalPrice})">加入購物車</button>
           </div>`;
       });
       document.getElementById('productContainer').innerHTML = html; updateCartBtn();
@@ -94,7 +115,6 @@ function loadBuyerOrders() {
 
 function handleReturnFromProducts() { if (isProxyMode) switchView('dashboardView'); else switchView('dashboardView'); }
 
-// 簽名板功能
 function initSignaturePad() {
   canvas = document.getElementById('signatureCanvas'); ctx = canvas.getContext('2d');
   canvas.addEventListener('mousedown', e => { isDrawing = true; drawStart(e.offsetX, e.offsetY); });

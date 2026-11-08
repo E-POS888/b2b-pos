@@ -1,4 +1,4 @@
-// js/admin.js - 處理代客操作、類別管理、商品管理、會員權限、與系統日誌
+// js/admin.js - 處理進階管理員專屬功能：類別管理、商品管理、會員權限、與系統日誌
 
 // === 會員與權限管理 ===
 function loadAdminMembers() {
@@ -45,33 +45,6 @@ function saveMemberUpdate(targetPhone, roleSelectId, levelSelectId) {
   }).then(res => res.json()).then(result => {
     if (result.status === 'success') { alert('更新成功！'); loadAdminMembers(); } else { alert('更新失敗'); }
   });
-}
-
-// === 代客操作 ===
-function searchProxyMember() {
-  const phone = document.getElementById('proxyPhoneInput').value.trim();
-  if(!phone) return alert('請輸入手機號碼');
-  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'searchMemberByPhone', data: { phone: phone } }) }).then(res=>res.json()).then(result=>{
-    if(result.data.found) { enterProxyMode(result.data.profile); } else { document.getElementById('proxyCreateForm').style.display = 'block'; }
-  });
-}
-function createProxyMember() {
-  const phone = document.getElementById('proxyPhoneInput').value.trim();
-  const company = document.getElementById('proxyRegCompany').value.trim();
-  const manager = document.getElementById('proxyRegManager').value.trim();
-  if(!company || !manager) return alert('請填寫公司與負責人');
-  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'adminCreateMember', data: { phone: phone, companyName: company, managerName: manager } }) }).then(res=>res.json()).then(result=>{
-    if(result.data.success) { enterProxyMode(result.data.profile); }
-  });
-}
-function enterProxyMode(profile) {
-  currentProfile = profile; isProxyMode = true; shoppingCart = [];
-  document.getElementById('proxyBanner').style.display = 'block'; document.getElementById('proxyClientName').innerText = profile.companyName;
-  document.getElementById('proxyCreateForm').style.display = 'none'; switchView('dashboardView'); 
-}
-function exitProxyMode() {
-  currentProfile = myOwnProfile; isProxyMode = false; shoppingCart = [];
-  document.getElementById('proxyBanner').style.display = 'none'; switchView('dashboardView');
 }
 
 // === 類別管理 ===
@@ -205,7 +178,6 @@ function fetchInventoryHistory(container) {
       let html = '';
       result.data.forEach(log => {
         let typeColor = log.type === '進貨' ? '#799C76' : '#D47C7C'; 
-        // 修正：新增顯示操作員姓名
         html += `<div style="border-bottom: 1px solid #E8DED1; padding: 12px 0;">
           <div style="font-size: 13px; color: #8C7A6B; display:flex; justify-content:space-between;">
             <span>${new Date(log.time).toLocaleString()}</span>

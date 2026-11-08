@@ -1,6 +1,6 @@
 // js/admin.js - 處理代客操作、類別管理、商品管理、會員權限、與系統日誌
 
-// 會員與權限管理
+// === 會員與權限管理 ===
 function loadAdminMembers() {
   switchView('adminMemberView');
   document.getElementById('adminMemberContainer').innerHTML = '<p style="text-align:center;">讀取會員資料中...</p>';
@@ -47,7 +47,7 @@ function saveMemberUpdate(targetPhone, roleSelectId, levelSelectId) {
   });
 }
 
-// 代客操作
+// === 代客操作 ===
 function searchProxyMember() {
   const phone = document.getElementById('proxyPhoneInput').value.trim();
   if(!phone) return alert('請輸入手機號碼');
@@ -74,7 +74,7 @@ function exitProxyMode() {
   document.getElementById('proxyBanner').style.display = 'none'; switchView('dashboardView');
 }
 
-// 類別管理
+// === 類別管理 ===
 function loadAdminCategories() {
   switchView('adminCategoryView'); document.getElementById('adminCategoryContainer').innerHTML = '<p style="text-align:center;">讀取清單中...</p>';
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminCategories', data: { uid: currentUser.uid } }) }).then(res => res.json()).then(result => {
@@ -104,7 +104,7 @@ function toggleCategoryStatus(categoryId) {
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleCategoryStatus', data: { uid: currentUser.uid, categoryId: categoryId } }) }).then(res => res.json()).then(result => { if (result.status === 'success') loadAdminCategories(); });
 }
 
-// 商品管理
+// === 商品管理 ===
 function fetchCategories() {
   const selectElement = document.getElementById('npCategory');
   selectElement.innerHTML = '<option value="">讀取分類中...</option>';
@@ -152,12 +152,12 @@ document.getElementById('newProductForm').addEventListener('submit', function(e)
 });
 function toggleProductStatus(sku) { fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleProductStatus', data: { uid: currentUser.uid, sku: sku } }) }).then(res => res.json()).then(result => { if (result.status === 'success') loadAdminProducts(); }); }
 
-// === 新增：系統操作日誌與進出貨查詢 ===
-let currentLogType = 'action'; // 預設顯示操作日誌
+// === 系統操作日誌與進出貨查詢 ===
+let currentLogType = 'action';
 
 function loadSystemLogs() {
   switchView('systemLogsView');
-  switchLogTab('action'); // 載入畫面時預設呼叫操作日誌
+  switchLogTab('action'); 
 }
 
 function switchLogTab(type) {
@@ -166,7 +166,6 @@ function switchLogTab(type) {
   const inventoryBtn = document.getElementById('tabInventoryLogBtn');
   const container = document.getElementById('logContainer');
   
-  // 切換按鈕視覺
   if (type === 'action') {
     actionBtn.style.background = '#8B6B4A'; actionBtn.style.color = '#FFF';
     inventoryBtn.style.background = '#E8DED1'; inventoryBtn.style.color = '#4A4036';
@@ -205,9 +204,13 @@ function fetchInventoryHistory(container) {
       if (result.data.length === 0) return container.innerHTML = '<p style="text-align:center;">當月尚無進出貨記錄。</p>';
       let html = '';
       result.data.forEach(log => {
-        let typeColor = log.type === '進貨' ? '#799C76' : '#D47C7C'; // 進綠出紅
+        let typeColor = log.type === '進貨' ? '#799C76' : '#D47C7C'; 
+        // 修正：新增顯示操作員姓名
         html += `<div style="border-bottom: 1px solid #E8DED1; padding: 12px 0;">
-          <div style="font-size: 13px; color: #8C7A6B;">${new Date(log.time).toLocaleString()}</div>
+          <div style="font-size: 13px; color: #8C7A6B; display:flex; justify-content:space-between;">
+            <span>${new Date(log.time).toLocaleString()}</span>
+            <span>操作員: ${log.managerName || '未知'}</span>
+          </div>
           <div style="display:flex; justify-content:space-between; margin: 4px 0;">
             <strong style="color: #4A4036;">SKU: ${log.sku}</strong>
             <span style="color: ${typeColor}; font-weight:bold;">${log.type} ${log.qty}</span>

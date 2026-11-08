@@ -14,13 +14,10 @@
     <button onclick="exitProxyMode()" style="margin-left: 10px; padding: 4px 12px; cursor: pointer; border:none; border-radius:4px; background:#FFF; color:#8B6B4A; font-weight:bold;">退出</button>
   </div>
 
-  <div class="app-header">
-    <img src="logo.jpg" alt="品牌 Logo" class="app-logo">
-  </div>
+  <div class="app-header"><img src="logo.jpg" alt="品牌 Logo" class="app-logo"></div>
 
   <div id="loadingView" class="view-section active">
-    <h2>系統載入中</h2>
-    <p style="text-align: center; color: #8C7A6B;">正在驗證您的專屬身分...</p>
+    <h2>系統載入中</h2><p style="text-align: center; color: #8C7A6B;">正在驗證您的專屬身分...</p>
   </div>
 
   <div id="registerView" class="view-section">
@@ -43,25 +40,28 @@
       <p style="margin: 5px 0;">系統權限：<span id="displayRole" class="badge"></span></p>
     </div>
     
-    <div class="action-group">
-      <h3>採購專區</h3>
+    <!-- === 權限區塊 1：會員專區 (所有人可見) === -->
+    <div id="buyerPanel" class="action-group">
+      <h3>會員專區</h3>
       <button class="btn primary-btn" onclick="loadProducts()">前往瀏覽商品</button>
       <button class="btn" onclick="loadBuyerOrders()">我的採購訂單</button>
       <button class="btn" style="background-color: #E8DED1; color: #4A4036;" onclick="loadEditProfile()">修改個人資料</button>
     </div>
 
-    <div id="adminPanel" class="action-group" style="display: none;">
-      <h3>門市管理作業</h3>
+    <!-- === 權限區塊 2：銷售專區 (一般管理員與進階管理員可見) === -->
+    <div id="sellerPanel" class="action-group" style="display: none; margin-top: 25px;">
+      <h3>門市銷售作業</h3>
       <button class="btn admin-btn" onclick="loadAdminOrders()">📦 訂單審核與接單</button>
       <button class="btn admin-btn" style="background-color: #799C76;" onclick="showEnterPickingOrder()">🔍 掃碼理貨系統</button>
-      <button class="btn admin-btn" style="background-color: #A38C75;" onclick="switchView('proxySetupView')">👨‍💼 代客建檔與操作</button>
       <button class="btn admin-btn-danger" onclick="loadAnomalyOrders()">⚠️ 缺貨異常專區</button>
-      
-      <div id="advancedAdminPanel" style="display: none; margin-top: 25px;">
-        <h3>進階後台管理</h3>
-        <button class="btn" style="background-color: #4A4036;" onclick="loadAdminCategories()">📂 項目類別管理</button>
-        <button class="btn" style="background-color: #4A4036;" onclick="loadAdminProducts()">⚙️ 商品進銷存管理</button>
-      </div>
+    </div>
+
+    <!-- === 權限區塊 3：管理員專區 (僅進階管理員可見) === -->
+    <div id="advancedAdminPanel" class="action-group" style="display: none; margin-top: 25px;">
+      <h3>進階後台管理</h3>
+      <button class="btn admin-btn" style="background-color: #A38C75;" onclick="switchView('proxySetupView')">👨‍💼 代客建檔與操作</button>
+      <button class="btn" style="background-color: #4A4036;" onclick="loadAdminCategories()">📂 項目類別管理</button>
+      <button class="btn" style="background-color: #4A4036;" onclick="loadAdminProducts()">⚙️ 商品進銷存管理</button>
     </div>
   </div>
 
@@ -84,7 +84,6 @@
     <label>請輸入客戶手機號碼進行搜尋：</label>
     <input type="tel" id="proxyPhoneInput" placeholder="0912345678">
     <button class="btn primary-btn" onclick="searchProxyMember()">搜尋客戶</button>
-    
     <div id="proxyCreateForm" style="display: none; margin-top: 20px; padding: 20px; background: #FCFBF9; border-radius: 12px; border: 1px solid #E8DED1;">
       <h4 style="color: #D47C7C; text-align: center; margin-top:0;">查無此客戶，請快速建檔</h4>
       <label>公司名稱*</label><input type="text" id="proxyRegCompany">
@@ -105,7 +104,6 @@
     <button class="btn" onclick="switchView('productListView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">繼續選購</button>
     <div id="cartContainer" style="margin-bottom: 20px;"></div>
     <h3 style="text-align: right; color: #8B6B4A; font-size: 20px;">總計：$<span id="cartTotal">0</span></h3>
-    
     <div id="signatureSection">
       <h4>請在此簽名：</h4>
       <div class="signature-wrapper"><canvas id="signatureCanvas"></canvas></div>
@@ -186,6 +184,10 @@
     <div id="adminProductContainer"><p style="text-align:center; color:#8C7A6B;">載入中...</p></div>
   </div>
 
+  <!-- === 模組化導入 JavaScript === -->
   <script src="js/app.js"></script>
+  <script src="js/buyer.js"></script>
+  <script src="js/seller.js"></script>
+  <script src="js/admin.js"></script>
 </body>
 </html>

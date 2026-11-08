@@ -1,4 +1,51 @@
-// js/admin.js - 處理代客操作、類別管理、商品管理
+// js/admin.js - 處理代客操作、類別管理、商品管理、與新增的會員權限管理
+
+// === 新增：會員與權限管理 ===
+function loadAdminMembers() {
+  switchView('adminMemberView');
+  document.getElementById('adminMemberContainer').innerHTML = '<p style="text-align:center;">讀取會員資料中...</p>';
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminMembers', data: { uid: currentUser.uid } }) })
+  .then(res => res.json()).then(result => {
+    if (result.status === 'success') {
+      let html = '';
+      result.data.forEach((m, index) => {
+        html += `<div class="order-card" style="border-left-color:#3498db; background:#FCFBF9;">
+          <h4>${m.company} (${m.manager})</h4><p style="font-size:14px; color:#8C7A6B;">手機/編號: ${m.phone}</p>
+          <div style="display:flex; gap:10px; margin-top:10px;">
+            <div style="flex:1;">
+              <label style="margin-top:0;">系統權限</label>
+              <select id="role_${index}">
+                <option value="買方" ${m.role==='買方'?'selected':''}>買方</option>
+                <option value="一般管理員" ${m.role==='一般管理員'?'selected':''}>一般管理員</option>
+                <option value="進階管理員" ${m.role==='進階管理員'?'selected':''}>進階管理員</option>
+              </select>
+            </div>
+            <div style="flex:1;">
+              <label style="margin-top:0;">會員等級</label>
+              <select id="level_${index}">
+                <option value="一般會員" ${m.level==='一般會員'?'selected':''}>一般會員</option>
+                <option value="VIP會員" ${m.level==='VIP會員'?'selected':''}>VIP會員</option>
+                <option value="VVIP會員" ${m.level==='VVIP會員'?'selected':''}>VVIP會員</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn primary-btn" style="padding:8px; margin-top:10px;" onclick="saveMemberUpdate('${m.phone}', 'role_${index}', 'level_${index}')">儲存變更</button>
+        </div>`;
+      });
+      document.getElementById('adminMemberContainer').innerHTML = html;
+    }
+  });
+}
+
+function saveMemberUpdate(targetPhone, roleSelectId, levelSelectId) {
+  const newRole = document.getElementById(roleSelectId).value;
+  const newLevel = document.getElementById(levelSelectId).value;
+  fetch(GAS_URL, { 
+    method: 'POST', body: JSON.stringify({ action: 'updateMemberRoleAndLevel', data: { uid: currentUser.uid, targetPhone: targetPhone, newRole: newRole, newLevel: newLevel } }) 
+  }).then(res => res.json()).then(result => {
+    if (result.status === 'success') { alert('更新成功！'); loadAdminMembers(); } else { alert('更新失敗'); }
+  });
+}
 
 function searchProxyMember() {
   const phone = document.getElementById('proxyPhoneInput').value.trim();
@@ -18,20 +65,16 @@ function createProxyMember() {
 }
 function enterProxyMode(profile) {
   currentProfile = profile; isProxyMode = true; shoppingCart = [];
-  document.getElementById('proxyBanner').style.display = 'block';
-  document.getElementById('proxyClientName').innerText = profile.companyName;
-  document.getElementById('proxyCreateForm').style.display = 'none';
-  switchView('dashboardView'); 
+  document.getElementById('proxyBanner').style.display = 'block'; document.getElementById('proxyClientName').innerText = profile.companyName;
+  document.getElementById('proxyCreateForm').style.display = 'none'; switchView('dashboardView'); 
 }
 function exitProxyMode() {
   currentProfile = myOwnProfile; isProxyMode = false; shoppingCart = [];
-  document.getElementById('proxyBanner').style.display = 'none';
-  switchView('dashboardView');
+  document.getElementById('proxyBanner').style.display = 'none'; switchView('dashboardView');
 }
 
-// 類別管理
 function loadAdminCategories() {
-  switchView('adminCategoryView'); document.getElementById('adminCategoryContainer').innerHTML = '<p style="text-align:center; color:#8C7A6B;">讀取清單中...</p>';
+  switchView('adminCategoryView'); document.getElementById('adminCategoryContainer').innerHTML = '<p style="text-align:center;">讀取清單中...</p>';
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminCategories', data: { uid: currentUser.uid } }) }).then(res => res.json()).then(result => {
     if (result.status === 'success') {
       if (result.data.length === 0) return document.getElementById('adminCategoryContainer').innerHTML = '<p style="text-align:center;">尚無分類資料。</p>';
@@ -48,7 +91,6 @@ function loadAdminCategories() {
     }
   });
 }
-
 document.getElementById('newCategoryForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const catData = { uid: currentUser.uid, name: document.getElementById('ncName').value.trim(), note: document.getElementById('ncNote').value.trim() };
@@ -56,27 +98,23 @@ document.getElementById('newCategoryForm').addEventListener('submit', function(e
     if (result.status === 'success') { alert('分類新增成功！'); document.getElementById('newCategoryForm').reset(); loadAdminCategories(); } 
   });
 });
-
 function toggleCategoryStatus(categoryId) {
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleCategoryStatus', data: { uid: currentUser.uid, categoryId: categoryId } }) }).then(res => res.json()).then(result => { if (result.status === 'success') loadAdminCategories(); });
 }
 
-// 商品管理
 function fetchCategories() {
   const selectElement = document.getElementById('npCategory');
   selectElement.innerHTML = '<option value="">讀取分類中...</option>';
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getCategories' }) }).then(res => res.json()).then(result => {
     if (result.status === 'success') {
-      let options = '<option value="">無分類</option>';
-      result.data.forEach(c => { options += `<option value="${c.name}">${c.name}</option>`; });
-      selectElement.innerHTML = options;
+      let options = '<option value="">無分類</option>'; result.data.forEach(c => { options += `<option value="${c.name}">${c.name}</option>`; }); selectElement.innerHTML = options;
     }
   });
 }
 
 function loadAdminProducts() {
   switchView('adminProductView'); fetchCategories(); 
-  document.getElementById('adminProductContainer').innerHTML = '<p style="text-align:center; color:#8C7A6B;">讀取清單中...</p>';
+  document.getElementById('adminProductContainer').innerHTML = '<p style="text-align:center;">讀取清單中...</p>';
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminInventoryList', data: { uid: currentUser.uid } }) }).then(res => res.json()).then(result => {
     if (result.status === 'success') {
       if (result.data.length === 0) return document.getElementById('adminProductContainer').innerHTML = '<p style="text-align:center;">尚無商品資料。</p>';
@@ -108,7 +146,4 @@ document.getElementById('newProductForm').addEventListener('submit', function(e)
     if (result.status === 'success') { alert('商品新增成功！'); document.getElementById('newProductForm').reset(); loadAdminProducts(); } 
   });
 });
-
-function toggleProductStatus(sku) {
-  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleProductStatus', data: { uid: currentUser.uid, sku: sku } }) }).then(res => res.json()).then(result => { if (result.status === 'success') loadAdminProducts(); });
-}
+function toggleProductStatus(sku) { fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleProductStatus', data: { uid: currentUser.uid, sku: sku } }) }).then(res => res.json()).then(result => { if (result.status === 'success') loadAdminProducts(); }); }

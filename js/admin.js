@@ -197,17 +197,39 @@ function uploadProductImage() {
 
 document.getElementById('newProductForm').addEventListener('submit', function(e) {
   e.preventDefault();
+
+  // === 迭代變更 1：新增圖片未上傳的自動防呆提醒 ===
+  if (document.getElementById('npFileInput').value !== '' && document.getElementById('npImage').value === '') {
+    alert('⚠️ 您已經選擇了照片但尚未上傳！\\n請先點擊預覽圖片下方的「確認上傳照片」按鈕，等待上傳成功後再進行建檔。');
+    return;
+  }
+
   const productData = {
-    uid: currentUser.uid, name: document.getElementById('npName').value.trim(), desc: document.getElementById('npDesc').value.trim(),
-    sku: document.getElementById('npSku').value.trim(), barcode: document.getElementById('npBarcode').value.trim(),
-    category: document.getElementById('npCategory').value, price: document.getElementById('npPrice').value,
-    safeStock: document.getElementById('npSafeStock').value, imageUrl: document.getElementById('npImage').value.trim(),
+    uid: currentUser.uid, 
+    name: document.getElementById('npName').value.trim(), 
+    // === 迭代變更 2：將傳遞給後端的參數名稱從 desc 修正為 description ===
+    description: document.getElementById('npDesc').value.trim(),
+    sku: document.getElementById('npSku').value.trim(), 
+    barcode: document.getElementById('npBarcode').value.trim(),
+    category: document.getElementById('npCategory').value, 
+    price: document.getElementById('npPrice').value,
+    safeStock: document.getElementById('npSafeStock').value, 
+    imageUrl: document.getElementById('npImage').value.trim(),
     levelLimit: document.getElementById('npLevelLimit').value
   };
   
   fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'addAdminProduct', data: productData }) }).then(res => res.json()).then(result => {
     if (result.status === 'success') { 
-      alert('商品建檔成功！'); document.getElementById('newProductForm').reset(); loadAdminProducts(); 
+      alert('商品建檔成功！'); 
+      document.getElementById('newProductForm').reset(); 
+      // === 迭代變更 3：建檔成功後，順手把前端圖片預覽區狀態清空 ===
+      document.getElementById('imagePreviewContainer').style.display = 'none';
+      document.getElementById('npImage').value = '';
+      window.tempImageBase64 = null;
+      document.getElementById('uploadImgBtn').innerText = '確認上傳照片';
+      document.getElementById('uploadImgBtn').style.background = '#A38C75';
+      
+      loadAdminProducts(); 
     } 
   });
 });

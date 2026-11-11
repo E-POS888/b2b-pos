@@ -57,13 +57,11 @@ function loadAdminCategories() {
       result.data.forEach(c => {
         let statusColor = (c.status === '啟用' || c.status === '上架') ? '#799C76' : '#8C7A6B';
         let actionText = (c.status === '啟用' || c.status === '上架') ? '停用' : '啟用';
-        // 對單引號進行轉義，避免 onclick 解析錯誤
         let safeName = c.name.replace(/'/g, "\\'");
         let safeNote = c.note ? c.note.replace(/'/g, "\\'") : '';
         html += `<div class="order-card" style="border-left-color: ${statusColor};">
           <h4>${c.name}</h4><p><strong>狀態:</strong> <span style="color:${statusColor}; font-weight:bold;">${c.status}</span></p>
           <p style="font-size: 13px; color: #555;">詳細介紹/備註: <br>${c.note || '無'}</p>
-          
           <div style="display:flex; gap:10px; margin-top:10px;">
             <button class="btn" style="background:#A38C75; padding:8px; margin-top:0; flex:1;" onclick="openEditCategory('${c.id}', '${safeName}', '${safeNote}')">編輯內容</button>
             <button class="btn" style="background:#E8DED1; color:#4A4036; padding:8px; margin-top:0; flex:1;" onclick="toggleCategoryStatus('${c.id}')">切換為${actionText}</button>
@@ -120,7 +118,6 @@ function loadAdminProducts() {
   switchView('adminProductView'); fetchCategories(); 
   document.getElementById('adminProductContainer').innerHTML = '<p style="text-align:center;">讀取清單中...</p>';
   
-  // 清空圖片預覽區
   document.getElementById('npFileInput').value = '';
   document.getElementById('imagePreviewContainer').style.display = 'none';
   document.getElementById('npImage').value = '';
@@ -147,7 +144,6 @@ function loadAdminProducts() {
   });
 }
 
-// 圖片選擇器監聽：讀取圖片並顯示預覽
 document.getElementById('npFileInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if(!file) return;
@@ -155,35 +151,27 @@ document.getElementById('npFileInput').addEventListener('change', function(e) {
   reader.onload = function(e2) {
     document.getElementById('npImagePreview').src = e2.target.result;
     document.getElementById('imagePreviewContainer').style.display = 'block';
-    
     window.tempImageBase64 = e2.target.result.split(',')[1];
     window.tempImageMime = file.type;
     window.tempImageName = file.name;
     
-    // 重置上傳按鈕狀態
     const btn = document.getElementById('uploadImgBtn');
     btn.innerText = '確認上傳照片'; btn.disabled = false; btn.style.background = '#A38C75';
   };
   reader.readAsDataURL(file);
 });
 
-// 獨立執行上傳圖片動作
 function uploadProductImage() {
   if(!window.tempImageBase64) return alert('請先選擇照片檔案');
-  
   const btn = document.getElementById('uploadImgBtn');
   btn.innerText = '圖片上傳中...'; btn.disabled = true;
   
   fetch(GAS_URL, { 
-    method: 'POST', 
-    body: JSON.stringify({ 
-      action: 'uploadImage', 
-      data: { uid: currentUser.uid, base64: window.tempImageBase64, mimeType: window.tempImageMime, filename: window.tempImageName }
-    })
+    method: 'POST', body: JSON.stringify({ action: 'uploadImage', data: { uid: currentUser.uid, base64: window.tempImageBase64, mimeType: window.tempImageMime, filename: window.tempImageName }})
   })
   .then(res => res.json()).then(res => {
     if(res.status === 'success') {
-      document.getElementById('npImage').value = res.data.url; // 將回傳的真實網址塞入隱藏欄位
+      document.getElementById('npImage').value = res.data.url; 
       alert('照片上傳成功！現在可繼續填寫其他商品資訊。');
       btn.innerText = '✅ 上傳完成'; btn.style.background = '#799C76';
     } else { 
@@ -197,17 +185,13 @@ function uploadProductImage() {
 
 document.getElementById('newProductForm').addEventListener('submit', function(e) {
   e.preventDefault();
-
-  // === 迭代變更 1：新增圖片未上傳的自動防呆提醒 ===
   if (document.getElementById('npFileInput').value !== '' && document.getElementById('npImage').value === '') {
-    alert('⚠️ 您已經選擇了照片但尚未上傳！\\n請先點擊預覽圖片下方的「確認上傳照片」按鈕，等待上傳成功後再進行建檔。');
+    alert('⚠️ 您已經選擇了照片但尚未上傳！\n請先點擊預覽圖片下方的「確認上傳照片」按鈕，等待上傳成功後再進行建檔。');
     return;
   }
-
   const productData = {
     uid: currentUser.uid, 
     name: document.getElementById('npName').value.trim(), 
-    // === 迭代變更 2：將傳遞給後端的參數名稱從 desc 修正為 description ===
     description: document.getElementById('npDesc').value.trim(),
     sku: document.getElementById('npSku').value.trim(), 
     barcode: document.getElementById('npBarcode').value.trim(),
@@ -222,19 +206,91 @@ document.getElementById('newProductForm').addEventListener('submit', function(e)
     if (result.status === 'success') { 
       alert('商品建檔成功！'); 
       document.getElementById('newProductForm').reset(); 
-      // === 迭代變更 3：建檔成功後，順手把前端圖片預覽區狀態清空 ===
       document.getElementById('imagePreviewContainer').style.display = 'none';
       document.getElementById('npImage').value = '';
       window.tempImageBase64 = null;
       document.getElementById('uploadImgBtn').innerText = '確認上傳照片';
       document.getElementById('uploadImgBtn').style.background = '#A38C75';
-      
       loadAdminProducts(); 
     } 
   });
 });
 
 function toggleProductStatus(sku) { fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'toggleProductStatus', data: { uid: currentUser.uid, sku: sku } }) }).then(res => res.json()).then(result => { if (result.status === 'success') loadAdminProducts(); }); }
+
+// === 新增：商品進銷存手動調整模組 ===
+function loadInventoryManagement() {
+  switchView('inventoryManagementView');
+  cancelAdjust(); // 隱藏表單
+  document.getElementById('inventoryListContainer').innerHTML = '<p style="text-align:center;">讀取庫存中...</p>';
+  
+  // 利用現有的獲取清單 API，不需重寫後端讀取邏輯
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'getAdminInventoryList', data: { uid: currentUser.uid } }) })
+  .then(res => res.json()).then(result => {
+    if (result.status === 'success') {
+      if (result.data.length === 0) return document.getElementById('inventoryListContainer').innerHTML = '<p style="text-align:center;">尚無商品資料。</p>';
+      
+      let html = '';
+      result.data.forEach(p => {
+        // 如果庫存低於等於安全水位，顯示警告紅色
+        let stockColor = p.actualStock <= (p.safeStock || 0) ? '#D47C7C' : '#799C76';
+        let barcodeText = p.barcode ? ` | 條碼: ${p.barcode}` : '';
+        
+        html += `<div class="order-card" style="border-left-color: ${stockColor};">
+          <h4>${p.name}</h4><p style="color:#8C7A6B;">SKU: ${p.sku}${barcodeText}</p>
+          <p style="margin: 10px 0;">目前實際庫存: <span style="color:${stockColor}; font-size:20px; font-weight:bold; margin-left:5px;">${p.actualStock}</span></p>
+          <button class="btn primary-btn" style="padding:10px; margin-top:10px;" onclick="openAdjustForm('${p.sku}', '${p.barcode || ''}', '${p.name}')">📝 手動調整庫存</button>
+        </div>`;
+      });
+      document.getElementById('inventoryListContainer').innerHTML = html;
+    }
+  });
+}
+
+function openAdjustForm(sku, barcode, name) {
+  document.getElementById('inventoryAdjustFormContainer').style.display = 'block';
+  document.getElementById('adjSku').value = sku;
+  document.getElementById('adjBarcode').value = barcode;
+  document.getElementById('adjProductName').innerText = name;
+  document.getElementById('adjProductSku').innerText = sku;
+  
+  // 重置表單值
+  document.getElementById('adjQty').value = '';
+  document.getElementById('adjNote').value = '';
+  document.getElementById('adjType').value = '進貨';
+  
+  // 畫面自動捲動至頂部方便填寫
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelAdjust() {
+  document.getElementById('inventoryAdjustFormContainer').style.display = 'none';
+}
+
+document.getElementById('inventoryAdjustForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const sku = document.getElementById('adjSku').value;
+  if(!sku) return;
+
+  const data = {
+    uid: currentUser.uid,
+    sku: sku,
+    barcode: document.getElementById('adjBarcode').value,
+    type: document.getElementById('adjType').value, // '進貨', '退貨', '報廢'
+    qty: parseInt(document.getElementById('adjQty').value, 10),
+    note: document.getElementById('adjNote').value.trim()
+  };
+
+  fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'adjustInventory', data: data }) })
+  .then(res => res.json()).then(result => {
+    if (result.status === 'success') {
+      alert('✅ 庫存異動成功！');
+      loadInventoryManagement(); // 重新讀取顯示最新庫存
+    } else {
+      alert('異動失敗：' + result.message);
+    }
+  }).catch(err => alert('連線失敗'));
+});
 
 // === 系統操作日誌與進出貨查詢 ===
 let currentLogType = 'action';

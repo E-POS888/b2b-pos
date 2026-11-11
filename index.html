@@ -8,18 +8,18 @@
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-
+  
   <div id="proxyBanner" style="display: none; background: #C19A6B; color: white; padding: 10px; text-align: center; font-weight: bold; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
     代客操作模式：為客戶 <span id="proxyClientName"></span> 選購中
     <button onclick="exitProxyMode()" style="margin-left: 10px; padding: 4px 12px; cursor: pointer; border:none; border-radius:4px; background:#FFF; color:#8B6B4A; font-weight:bold;">退出</button>
   </div>
-
+  
   <div class="app-header"><img src="logo.jpg" alt="品牌 Logo" class="app-logo"></div>
-
+  
   <div id="loadingView" class="view-section active">
     <h2>系統載入中</h2><p style="text-align: center; color: #8C7A6B;">正在驗證您的專屬身分...</p>
   </div>
-
+  
   <div id="registerView" class="view-section">
     <h2>新會員註冊</h2>
     <p style="text-align: center; color: #8C7A6B; font-size: 14px;">歡迎加入！請填寫資料以啟用您的權限。</p>
@@ -32,7 +32,7 @@
       <button type="submit" class="btn primary-btn">確認註冊</button>
     </form>
   </div>
-
+  
   <div id="dashboardView" class="view-section">
     <h2 id="welcomeMessage">歡迎</h2>
     <div style="text-align: center; color: #8C7A6B; font-size: 14px; margin-bottom: 20px;">
@@ -47,24 +47,25 @@
       <button class="btn" onclick="loadBuyerOrders()">我的採購訂單</button>
       <button class="btn" style="background-color: #E8DED1; color: #4A4036;" onclick="loadEditProfile()">修改個人資料</button>
     </div>
-
+  
     <div id="sellerPanel" class="action-group" style="display: none; margin-top: 25px;">
       <h3>門市銷售作業</h3>
       <button class="btn admin-btn" onclick="loadAdminOrders()">📦 訂單審核與接單</button>
       <button class="btn admin-btn" style="background-color: #799C76;" onclick="showEnterPickingOrder()">🔍 掃碼理貨系統</button>
       <button class="btn admin-btn-danger" onclick="loadAnomalyOrders()">⚠️ 缺貨異常專區</button>
     </div>
-
+  
     <div id="advancedAdminPanel" class="action-group" style="display: none; margin-top: 25px;">
       <h3>進階後台管理</h3>
       <button class="btn admin-btn" style="background-color: #A38C75;" onclick="switchView('proxySetupView')">👨‍💼 代客建檔與操作</button>
       <button class="btn" style="background-color: #4A4036;" onclick="loadAdminMembers()">👥 會員與權限管理</button>
-      <button class="btn" style="background-color: #4A4036;" onclick="loadAdminCategories()">📂 項目類別管理</button>
-      <button class="btn" style="background-color: #4A4036;" onclick="loadAdminProducts()">⚙️ 商品進銷存管理</button>
+      <!-- 修改這裡：將類別與建檔合併為商品資訊管理中樞，並加入新的進銷存管理 -->
+      <button class="btn" style="background-color: #4A4036;" onclick="switchView('productInfoHubView')">📂 商品資訊管理</button>
+      <button class="btn" style="background-color: #4A4036;" onclick="loadInventoryManagement()">⚙️ 商品進銷存管理</button>
       <button class="btn" style="background-color: #4A4036;" onclick="loadSystemLogs()">📊 系統日誌與進出貨查詢</button>
     </div>
   </div>
-
+  
   <div id="profileView" class="view-section">
     <h2>修改個人資料</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">取消返回</button>
@@ -77,7 +78,7 @@
       <button type="submit" class="btn primary-btn">儲存修改</button>
     </form>
   </div>
-
+  
   <div id="proxySetupView" class="view-section">
     <h2>代客建檔與操作</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回後台</button>
@@ -85,26 +86,28 @@
     <input type="tel" id="proxyPhoneInput" placeholder="0912345678">
     <button class="btn primary-btn" onclick="searchProxyMember()">搜尋客戶</button>
     <div id="proxyCreateForm" style="display: none; margin-top: 20px; padding: 20px; background: #FCFBF9; border-radius: 12px; border: 1px solid #E8DED1;">
-      <h4 style="color: #D47C7C; text-align: center; margin-top:0;">查無此客戶，請快速建檔</h4>
+      <h4 style="color: #D47C7C; text-align: center; margin-top:0;">查無此客戶，請快速建檔...</h4>
       <label>公司名稱*</label><input type="text" id="proxyRegCompany">
       <label>負責人姓名*</label><input type="text" id="proxyRegManager">
-      <button class="btn primary-btn" onclick="createProxyMember()">建檔並開始代客操作</button>
+      <label>統一編號</label><input type="text" id="proxyRegTaxId">
+      <label>送貨地址</label><input type="text" id="proxyRegAddress">
+      <button class="btn primary-btn" onclick="createProxyMember()" style="margin-top:20px;">建檔並開始代客操作</button>
     </div>
   </div>
-
+  
   <div id="adminMemberView" class="view-section">
     <h2>會員與權限管理</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回</button>
     <div id="adminMemberContainer"><p style="text-align:center; color:#8C7A6B;">載入中...</p></div>
   </div>
-
+  
   <div id="productListView" class="view-section">
     <h2>採購清單</h2>
     <button class="btn" onclick="handleReturnFromProducts()" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回</button>
     <div id="productContainer"><p style="text-align:center; color:#8C7A6B;">載入中...</p></div>
     <button id="viewCartBtn" class="btn primary-btn" onclick="showCart()" style="position: sticky; bottom: 15px; box-shadow: var(--shadow-card);">查看購物車 (0)</button>
   </div>
-
+  
   <div id="cartView" class="view-section">
     <h2>購物車確認</h2>
     <button class="btn" onclick="switchView('productListView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">繼續選購</button>
@@ -123,7 +126,7 @@
     <button class="btn" onclick="handleReturnFromProducts()" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回</button>
     <div id="buyerOrderContainer"><p style="text-align:center; color:#8C7A6B;">載入中...</p></div>
   </div>
-
+  
   <div id="adminOrderView" class="view-section">
     <h2>待審核訂單列表</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回</button>
@@ -135,7 +138,7 @@
     <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回</button>
     <div id="anomalyOrderContainer"><p style="text-align:center; color:#8C7A6B;">載入中...</p></div>
   </div>
-
+  
   <div id="enterPickingOrderView" class="view-section">
     <h2>掃碼理貨系統</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回</button>
@@ -143,7 +146,7 @@
     <input type="text" id="targetOrderIdInput" placeholder="ORD-20261105-1234">
     <button class="btn primary-btn" onclick="startPicking()">開始理貨</button>
   </div>
-
+  
   <div id="pickingProcessView" class="view-section">
     <h2>單號：<span id="pickingOrderIdText"></span></h2>
     <button class="btn" onclick="switchView('enterPickingOrderView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">暫停並離開</button>
@@ -153,10 +156,21 @@
     <button class="btn primary-btn" onclick="submitPickingFinal()" id="submitPickingBtn" style="margin-top: 25px;">確認並完成理貨</button>
   </div>
 
+  <!-- 新增：商品資訊管理中樞 -->
+  <div id="productInfoHubView" class="view-section">
+    <h2>商品資訊管理</h2>
+    <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回後台</button>
+    <div class="action-group" style="display:flex; flex-direction:column; gap:15px;">
+      <button class="btn admin-btn" onclick="loadAdminCategories()" style="margin-top:0;">📂 項目類別管理</button>
+      <button class="btn admin-btn" onclick="loadAdminProducts()" style="margin-top:0; background-color: #A38C75;">⚙️ 商品建檔與管理</button>
+    </div>
+  </div>
+  
   <!-- 項目類別管理 -->
   <div id="adminCategoryView" class="view-section">
     <h2>項目類別管理</h2>
-    <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回</button>
+    <!-- 這裡的返回改成回到 Hub -->
+    <button class="btn" onclick="switchView('productInfoHubView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回資訊管理中樞</button>
     <div style="background: #FCFBF9; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: var(--shadow-card);">
       <h3 style="margin-top: 0; border:none;">➕ 新增類別</h3>
       <form id="newCategoryForm">
@@ -168,8 +182,8 @@
     <h3>現有類別清單</h3>
     <div id="adminCategoryContainer"><p style="text-align:center; color:#8C7A6B;">載入中...</p></div>
   </div>
-
-  <!-- 新增：編輯項目類別專區 -->
+  
+  <!-- 編輯項目類別專區 -->
   <div id="editCategoryView" class="view-section">
     <h2>編輯項目類別</h2>
     <button class="btn" onclick="loadAdminCategories()" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">取消編輯</button>
@@ -182,28 +196,26 @@
       </form>
     </div>
   </div>
-
+  
   <!-- 商品建檔管理 -->
   <div id="adminProductView" class="view-section">
     <h2>商品建檔與管理</h2>
-    <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回</button>
+    <!-- 這裡的返回改成回到 Hub -->
+    <button class="btn" onclick="switchView('productInfoHubView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回資訊管理中樞</button>
     <div style="background: #FCFBF9; padding: 20px; border-radius: 12px; margin-bottom: 25px; box-shadow: var(--shadow-card);">
       <h3 style="margin-top: 0; border:none;">➕ 新增商品</h3>
       <form id="newProductForm">
-        
-        <!-- 修改 1：商品名稱第一，類別第二 -->
         <label>商品名稱*</label><input type="text" id="npName" required>
         <label>項目類別</label><select id="npCategory"><option value="">無分類</option></select>
         
-        <!-- 修改 2：獨立圖片上傳模組 -->
         <label>商品照片</label>
         <input type="file" id="npFileInput" accept="image/*">
         <div id="imagePreviewContainer" class="img-preview-box" style="display:none;">
           <img id="npImagePreview">
           <button type="button" class="btn" id="uploadImgBtn" style="background:#A38C75; padding:8px; margin-top:10px;" onclick="uploadProductImage()">確認上傳照片</button>
         </div>
-        <input type="hidden" id="npImage"> <!-- 接收上傳成功後的真實網址 -->
-
+        <input type="hidden" id="npImage">
+  
         <label>商品描述</label><textarea id="npDesc" rows="3" style="resize:vertical;"></textarea>
         <label>SKU (唯一貨號)*</label><input type="text" id="npSku" required>
         <label>掃描條碼</label><input type="text" id="npBarcode">
@@ -215,8 +227,6 @@
           <option value="VIP會員">VIP會員專屬</option>
           <option value="VVIP會員">VVIP會員專屬</option>
         </select>
-        
-        <!-- 最後送出商品建檔 -->
         <button type="submit" class="btn primary-btn" style="margin-top: 25px;">確認新增商品建檔</button>
       </form>
     </div>
@@ -224,6 +234,38 @@
     <div id="adminProductContainer"><p style="text-align:center; color:#8C7A6B;">載入中...</p></div>
   </div>
 
+  <!-- 新增：真正的商品進銷存管理 (庫存異動) -->
+  <div id="inventoryManagementView" class="view-section">
+    <h2>商品進銷存管理</h2>
+    <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回後台</button>
+
+    <div id="inventoryAdjustFormContainer" style="display:none; background: #FCFBF9; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 2px solid #A38C75; box-shadow: var(--shadow-card);">
+      <h3 style="margin-top:0; border:none; color:#8B6B4A;">📝 庫存手動異動作業</h3>
+      <p style="margin-bottom:15px;">正在調整：<strong id="adjProductName"></strong><br><span style="font-size:13px; color:#8C7A6B;">SKU: <span id="adjProductSku"></span></span></p>
+      <form id="inventoryAdjustForm">
+        <input type="hidden" id="adjSku">
+        <input type="hidden" id="adjBarcode">
+        <label style="margin-top:0;">異動類型*</label>
+        <select id="adjType" required>
+          <option value="進貨">📥 進貨 (增加庫存)</option>
+          <option value="退貨">📤 退貨 (減少庫存)</option>
+          <option value="報廢">🗑️ 報廢 (減少庫存)</option>
+        </select>
+        <label>異動數量* (請輸入正整數)</label>
+        <input type="number" id="adjQty" required min="1" placeholder="例如: 10">
+        <label>內部備註</label>
+        <input type="text" id="adjNote" placeholder="例如：廠商進貨、過期報廢...">
+        <div style="display:flex; gap:10px; margin-top: 15px;">
+          <button type="button" class="btn" style="background:#E8DED1; color:#4A4036; flex:1; margin-top:0;" onclick="cancelAdjust()">取消</button>
+          <button type="submit" class="btn primary-btn" style="flex:1; margin-top:0;">確認送出</button>
+        </div>
+      </form>
+    </div>
+
+    <h3>目前庫存狀況</h3>
+    <div id="inventoryListContainer"><p style="text-align:center; color:#8C7A6B;">載入中...</p></div>
+  </div>
+  
   <div id="systemLogsView" class="view-section">
     <h2>數據與日誌查詢</h2>
     <button class="btn" onclick="switchView('dashboardView')" style="background:#E8DED1; color:#4A4036; margin-bottom:15px;">返回後台</button>
@@ -233,7 +275,7 @@
     </div>
     <div id="logContainer"><p style="text-align:center; color:#8C7A6B;">載入中...</p></div>
   </div>
-
+  
   <script src="js/app.js"></script>
   <script src="js/buyer.js"></script>
   <script src="js/seller.js"></script>
